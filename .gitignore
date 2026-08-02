@@ -12,6 +12,10 @@
 # Session archives (may contain sensitive transcripts)
 /archive/
 
+# Research material — reference git histories (3.6G) and old templates
+/repos/
+/_reference/
+
 # OS / tooling noise
 .DS_Store
 __pycache__/
