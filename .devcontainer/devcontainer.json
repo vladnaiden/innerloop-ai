@@ -1,0 +1,41 @@
+{
+  "name": "${localWorkspaceFolderBasename}",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "remoteUser": "node",
+  // Host-side, before the container starts: the shared session dir must exist,
+  // otherwise Docker creates it root-owned on Linux hosts.
+  "initializeCommand": "mkdir -p \"${HOME:?}/.claude/projects\"",
+  "mounts": [
+    // Persists container-local Claude state (credentials, settings, onboarding)
+    // across container shutdown/rebuild. Named volumes survive `docker rm`.
+    // ${localWorkspaceFolderBasename} makes the volume unique per project, so
+    // this folder can be copied into any repo without collisions.
+    "source=${localWorkspaceFolderBasename}-claude-config,target=/home/node/.claude,type=volume",
+    // One shared session base across the host and every devcontainer: the
+    // host's ~/.claude/projects is bind-mounted over the volume's projects dir.
+    // HOME resolves on macOS/Linux, USERPROFILE on Windows (the other is empty).
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.claude/projects,target=/home/node/.claude/projects,type=bind",
+    "source=${localWorkspaceFolderBasename}-shell-history,target=/commandhistory,type=volume"
+    // No external knowledge-base mounts: the brain (wiki/ + inbox/) lives
+    // INSIDE this repo, gitignored. Engine is public-shaped, data stays local.
+  ],
+  "containerEnv": {
+    // Keeps ~/.claude.json (onboarding, oauth account, project state) inside
+    // the mounted volume instead of the ephemeral home dir.
+    "CLAUDE_CONFIG_DIR": "/home/node/.claude",
+    "DEVCONTAINER": "true"
+  },
+  "remoteEnv": {
+    "HISTFILE": "/commandhistory/.bash_history"
+  },
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "anthropic.claude-code"
+      ]
+    }
+  }
+}

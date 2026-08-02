@@ -1,0 +1,18 @@
+# ── The brain (personal data) — lives in-repo, never committed ──
+/wiki/
+/inbox/
+/.raw/
+/_templates/
+/.obsidian/
+/TASKS.md
+
+# Vault runtime state (indexes, locks, transport/mode detection)
+/.vault-meta/
+
+# Session archives (may contain sensitive transcripts)
+/archive/
+
+# OS / tooling noise
+.DS_Store
+__pycache__/
+*.pyc
