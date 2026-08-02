@@ -4,42 +4,42 @@ title: "About Me — entry point"
 status: evergreen
 ---
 
-# About Me — точка входу
+# About Me — entry point
 
-> **Клоде, читай це першим на старті кожної сесії.** Це курований профіль, не сирі нотатки. Далі читай [[LESSONS]] (як зі мною працювати) і [[hot]] (свіжий контекст). Глибше у `wiki/` — тільки за темою розмови.
+> **Claude, read this first at the start of every session.** This is a curated profile, not raw notes. Then read [[LESSONS]] (how to work with me) and [[hot]] (recent context). Go deeper into `wiki/` only for the topic at hand.
 
-## Хто я (5 речень)
+## Who I am (5 sentences)
 
-_(Ім'я, чим займаєшся, головна мета на рік, ключова сильна сторона, ключове обмеження.)_
+_(Name, what you do, main goal for the year, key strength, key constraint.)_
 
-## Що я хочу від Клода
+## What I want from Claude
 
-_(Роль: ментор/коуч/консультант. Формат порад: конкретика, один хід, чесність. Що заборонено.)_
+_(Role: mentor / coach / consultant. Advice format: concrete, one move, honest. What is off-limits.)_
 
-## Контракт читання (маршрут за темою)
+## Reading contract (route by topic)
 
-_(Тема → сторінка. Напр.: кар'єра → wiki/domains/career/_index.md; гроші → …)_
+_(Topic → page. E.g.: career → wiki/domains/career/_index.md; money → …)_
 
-## Ключові факти, які мають впливати на поради
+## Key facts that must shape any advice
 
-_(5–10 фактів, без яких порада буде повз. Цінності, обмеження, ресурси.)_
+_(5–10 facts without which advice will miss. Values, constraints, resources.)_
 
-## Мої нерозв'язані рішення (тут найкорисніша допомога)
+## My open decisions (where help matters most)
 
-_(Список відкритих питань, де потрібен ментор, а не виконавець.)_
+_(List of open questions where a mentor is needed, not an executor.)_
 
-## Поточні проєкти
+## Current projects
 
-_(Назва → статус → наступний крок.)_
+_(Name → status → next step.)_
 
-## Робочі правила (workflow) — Клоде, дотримуйся
+## Working rules (workflow) — Claude, follow these
 
-_(Напр.: не деплоїти без команди; питати перед видаленням; мова відповідей.)_
+_(E.g.: never deploy without an explicit command; ask before deleting; response language.)_
 
-## Як оновлювати цей профіль
+## How this profile is updated
 
-Оновлюється через `/reflect` (уроки → LESSONS.md) і `/wiki-ingest` (факти → wiki/). Не дописуй сюди сире — тільки куроване.
+Updated via `/reflect` (lessons → LESSONS.md) and `/wiki-ingest` (facts → wiki/). Never append raw notes here — curated content only.
 
-## Петля самонавчання (як Клод стає розумнішим про мене)
+## The self-learning loop (how Claude gets smarter about me)
 
-capture (розмови, inbox) → structure (`/wiki-ingest`, `/save`) → retrieve (`/wiki-retrieve`) → reflect (`/reflect` → [[LESSONS]]).
+capture (conversations, inbox) → structure (`/wiki-ingest`, `/save`) → retrieve (`/wiki-retrieve`) → reflect (`/reflect` → [[LESSONS]]).

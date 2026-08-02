@@ -2,16 +2,16 @@
 
 ## Last Updated
 
-_(дата)_
+_(date)_
 
 ## Key Recent Facts
 
-_(3–7 фактів, що змінилися нещодавно)_
+_(3–7 facts that changed recently)_
 
 ## Recent Changes
 
-_(що додано/змінено у вольті останніми сесіями)_
+_(what was added/changed in the vault over the last sessions)_
 
 ## Active Threads
 
-_(відкриті нитки: що почато й не завершено, наступні кроки)_
+_(open threads: what was started and not finished, next steps)_
