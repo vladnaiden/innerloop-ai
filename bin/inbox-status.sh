@@ -12,11 +12,12 @@
 
 set -euo pipefail
 
-INBOX="${INBOX_DIR:-/workspaces/brain-inbox}"
-MANIFEST="/workspaces/claude-obsidian/.raw/.manifest.json"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+INBOX="${INBOX_DIR:-$ROOT/inbox}"
+MANIFEST="$ROOT/.raw/.manifest.json"
 MODE="${1:-}"
 
-[ -d "$INBOX" ] || { echo "ERR: inbox not found at $INBOX (rebuild the devcontainer?)" >&2; exit 1; }
+[ -d "$INBOX" ] || { echo "ERR: inbox not found at $INBOX (create inbox/ in the repo root)" >&2; exit 1; }
 
 python3 - "$INBOX" "$MANIFEST" "$MODE" <<'PY'
 import sys, os, json, hashlib

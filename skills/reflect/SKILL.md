@@ -41,7 +41,7 @@ For each process lesson, apply the rules stated at the top of `LESSONS.md`:
 - **Format:** `` - `[PROVENANCE×N]` **lesson** — коротке чому. · signal · YYYY-MM-DD ``
 - **Corroboration gate:** a lesson enters **Довірені** only after **≥2 independent confirmations**. First observation → **Орієнтовні**. On a repeat confirmation, bump the `×N` and the date, and promote if N≥2.
 - **Time-decay / conflict:** if a fresh `corrected`/`dead_end` contradicts an existing lesson, move both readings to **Суперечливі** and let recency win; if the old lesson is clearly dead, move it to **Архів** with a one-line note.
-- **A `corrected` signal** also gets a line in **Виправлення від Vlad** (the rule learned from the mistake).
+- **A `corrected` signal** also gets a line in **Виправлення від користувача** (the rule learned from the mistake).
 - **Keep it short.** LESSONS.md loads every session. Merge near-duplicates; archive anything spent. Target < ~40 lines of live lessons.
 
 ### 3. Route new facts about the user into the vault

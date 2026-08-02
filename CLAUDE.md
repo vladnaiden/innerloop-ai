@@ -51,3 +51,5 @@ That capture → structure → retrieve → reflect loop is the product.
 - Semantic rerank (optional, local, no egress): `bash bin/setup-embeddings.sh`.
 - Retrieval index: `bash bin/setup-retrieve.sh`.
 - Vault methodology mode (LYT / PARA / Zettelkasten / generic): `bash bin/setup-mode.sh`.
+- Dated overview of all Claude sessions across projects: `bash bin/sessions-list.sh`
+  (`-a` = all, or a substring to filter by project).
