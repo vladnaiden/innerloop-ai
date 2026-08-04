@@ -30,7 +30,9 @@ capture ──▶ structure ──▶ retrieve ──▶ reflect ──▶ (smar
 ## Quick start
 
 1. Clone, open in VS Code, "Reopen in Container" (devcontainer included —
-   Claude Code pre-installed, permissions pre-configured).
+   Claude Code pre-installed; note it defaults to `bypassPermissions` inside
+   the container, change that in `~/.claude/settings.json` if you prefer
+   prompts).
 2. First run seeds an empty brain from `templates/`. Fill `wiki/about-me.md` —
    who you are, what you want from your mentor.
 3. Drop raw notes (journals, exports, docs) into `inbox/` and tell Claude:
@@ -39,6 +41,22 @@ capture ──▶ structure ──▶ retrieve ──▶ reflect ──▶ (smar
 
 Your data (`wiki/`, `inbox/`) is gitignored — the engine is shareable, the
 brain is yours.
+
+## How it's wired
+
+Everything ships as standard Claude Code project config — no plugin install:
+
+- **Skills** (`.claude/skills/`): `/wiki-ingest`, `/save`, `/wiki-retrieve`,
+  `/reflect` — auto-discovered by Claude Code.
+- **Hooks** (`.claude/settings.json`):
+  - `SessionStart` — loads `about-me.md` → `LESSONS.md` → `hot.md`, clears
+    stale wiki locks. Safe no-op when no vault exists.
+  - `PostCompact` — re-reads `hot.md` (hook-injected context doesn't survive
+    context compaction).
+  - `Stop` — nudges a `hot.md` refresh when wiki pages changed this session,
+    and offers `/reflect` after substantive sessions (never runs it silently).
+
+Personal overrides go in `.claude/settings.local.json` (gitignored).
 
 ## Optional
 
@@ -53,3 +71,7 @@ Reflect pattern inspired by outcome-weighted memory in
 [claude-mem](https://github.com/thedotmack/claude-mem); markdown-first memory
 philosophy shared with [basic-memory](https://github.com/basicmachines-co/basic-memory).
 InnerLoop's focus is the layer none of them ship: the mentor.
+
+## License
+
+[MIT](LICENSE)

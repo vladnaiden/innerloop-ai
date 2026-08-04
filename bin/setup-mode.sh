@@ -136,7 +136,7 @@ fi
 say ""
 say "═══ Done. Mode is: $REQUESTED_MODE ═══"
 say ""
-say "Other skills (wiki-ingest, save, autoresearch) will consult this mode automatically."
+say "Other skills (wiki-ingest, save) will consult this mode automatically."
 say "Existing files are NOT auto-migrated. New files will follow the new mode's conventions."
 say ""
 say "To switch modes later: re-run \`bash bin/setup-mode.sh\`."

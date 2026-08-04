@@ -1,6 +1,6 @@
 ---
 name: wiki-retrieve
-description: "Hybrid retrieval primitive for the Compound Vault. Replaces the v1.6 static hot→index→drill read order with contextual-prefix + BM25 + cosine-rerank, modeled on Anthropic's Sept 2024 Contextual Retrieval research (35-49-67% retrieval-failure reduction). Opt-in via `bash bin/setup-retrieve.sh`; feature-detected by wiki-query and autoresearch. Triggers on: retrieve, hybrid retrieval, BM25, rerank, contextual retrieval, search the chunks, chunk search, vault search, semantic search, what chunks match, find relevant passages."
+description: "Hybrid retrieval primitive for the Compound Vault. Replaces the v1.6 static hot→index→drill read order with contextual-prefix + BM25 + cosine-rerank, modeled on Anthropic's Sept 2024 Contextual Retrieval research (35-49-67% retrieval-failure reduction). Opt-in via `bash bin/setup-retrieve.sh`; callers feature-detect it and fall back to plain reads. Triggers on: retrieve, hybrid retrieval, BM25, rerank, contextual retrieval, search the chunks, chunk search, vault search, semantic search, what chunks match, find relevant passages."
 allowed-tools: Read Bash
 ---
 
@@ -8,7 +8,7 @@ allowed-tools: Read Bash
 
 The v1.6 query path was `Read(hot.md) → Read(index.md) → Read(3-5 pages) → synthesize`. It worked, but page-level granularity loses to chunk-level granularity any time the answer lives in a specific passage rather than a whole page. The v1.7 `wiki-retrieve` skill is the chunk-level upgrade — opt-in, feature-gated, and replaces nothing if you don't run the setup.
 
-**Origin**: This skill is original to claude-obsidian. There is no upstream kepano equivalent. The technique is from [Anthropic's Sept 2024 Contextual Retrieval research](https://www.anthropic.com/news/contextual-retrieval) — we implement it as agent-skill plumbing.
+**Origin**: This skill is original to InnerLoop AI. The technique is from [Anthropic's Sept 2024 Contextual Retrieval research](https://www.anthropic.com/news/contextual-retrieval) — we implement it as agent-skill plumbing.
 
 ---
 
@@ -59,7 +59,7 @@ QUERY:
        └─ dedupe by page-address, return top-N candidates with absolute_path
        │
        ▼
-  caller (wiki-query / autoresearch) reads the cited pages and synthesizes
+  caller reads the cited pages and synthesizes
 ```
 
 ---
@@ -117,7 +117,7 @@ The `claude-cli` subprocess tier (no API key) is free in $ terms but slower (~3-
 
 ## Skill commands (recipe)
 
-These are the commands wiki-query and autoresearch will execute when wiki-retrieve is feature-detected. Other skills should mirror this pattern.
+These are the commands any caller executes when wiki-retrieve is feature-detected. Other skills should mirror this pattern.
 
 ### Standard retrieve
 ```bash
@@ -151,18 +151,18 @@ Reports which strategy will run (cosine via ollama / no-op).
 
 ---
 
-## Integration with wiki-query
+## Answering questions with retrieval
 
-After this skill is installed, `skills/wiki-query/SKILL.md` standard and deep modes will:
+When answering a question over the vault:
 
 1. Read `wiki/hot.md` (always — quick context).
 2. Call `python3 scripts/retrieve.py "<query>" --top 5`.
-3. Read the candidate pages from the result's `absolute_path` field (using the v1.7 transport selector — `obsidian-cli read` or `Read` tool).
+3. Read the candidate pages from the result's `absolute_path` field.
 4. Synthesize with chunk-level citation.
 
-Quick mode is unchanged (hot.md only — never invokes retrieval).
+For trivial "what's current?" questions, hot.md alone is enough — skip retrieval.
 
-If `retrieve.py` exits 10 (feature not provisioned), `wiki-query` falls back to the legacy v1.6 `Read(index.md) → Read(N pages)` order. No user-visible breakage.
+If `retrieve.py` exits 10 (feature not provisioned), fall back to the legacy `Read(index.md) → Read(N pages)` order. No user-visible breakage.
 
 ---
 
@@ -196,22 +196,21 @@ Documented for transparency; not implemented in v1.7.0:
 | Sparse retrieval | BM25 | + SPLADE learned-sparse |
 | Dense retrieval | (none — rerank-only) | Separate vector candidate set fused with BM25 (true hybrid) |
 | Rerank | nomic cosine / no-op | + sentence-transformers BGE-base, Cohere Rerank, Voyage Rerank |
-| Multi-vault | (single-vault) | Federation via wiki-federate (backlog #15) |
+| Multi-vault | (single-vault) | Federation across vaults |
 
 ---
 
 ## Cross-reference
 
-- Decision tree for transports: [`wiki/references/transport-fallback.md`](../../wiki/references/transport-fallback.md)
-- Concurrency policy: [`skills/wiki-ingest/SKILL.md`](../wiki-ingest/SKILL.md) §Concurrency
-- DragonScale Memory: [`wiki/concepts/DragonScale Memory.md`](../../wiki/concepts/DragonScale%20Memory.md)
+- Transport decision tree: header comments in `scripts/detect-transport.sh`
+- Concurrency policy: [`wiki-ingest/SKILL.md`](../wiki-ingest/SKILL.md) §Concurrency
 - Anthropic Contextual Retrieval research: https://www.anthropic.com/news/contextual-retrieval
 
 ---
 
 ## How to think (10-principle mapping)
 
-When working on this skill, apply the 10-principle loop. See [`skills/think/SKILL.md`](../think/SKILL.md) for the canonical framework.
+When working on this skill, apply the 10-principle loop below.
 
 | # | Principle | Application here |
 |---|-----------|-------------------|
@@ -224,4 +223,4 @@ When working on this skill, apply the 10-principle loop. See [`skills/think/SKIL
 | 7 | FEEL | When not provisioned, exit 10 with a friendly "run `bash bin/setup-retrieve.sh` first" message — not a stack trace. |
 | 8 | ACCEPT | When retrieval returns empty, say so honestly. Don't fabricate. Don't pad with low-confidence guesses. |
 | 9 | CREATE | A ranked candidate list with `--explain` traceability for every score component. |
-| 10 | GROW | Queries that consistently fail → content gaps in the wiki. Track those as autoresearch inputs. |
+| 10 | GROW | Queries that consistently fail → content gaps in the wiki. Track those as future ingest targets. |

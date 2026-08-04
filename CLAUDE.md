@@ -7,11 +7,11 @@ the system level — clone, open in the devcontainer, and everything is local.
 ## Engine vs brain
 
 ```
-ENGINE (committed)              BRAIN (gitignored, in-repo)
-  skills/    4 core skills        wiki/     the vault (open in Obsidian)
-  hooks/     session loop         inbox/    raw dumps to process (read-only)
-  scripts/   retrieval, locks     .raw/     ingested source documents
-  bin/       setup helpers        .vault-meta/  indexes, locks, mode
+ENGINE (committed)                  BRAIN (gitignored, in-repo)
+  .claude/skills/  4 core skills     wiki/     the vault (open in Obsidian)
+  .claude/settings.json  hooks       inbox/    raw dumps to process (read-only)
+  scripts/   retrieval, locks        .raw/     ingested source documents
+  bin/       setup helpers           .vault-meta/  indexes, locks, mode
   templates/ empty brain seed
   .devcontainer/
 ```
@@ -44,6 +44,9 @@ That capture → structure → retrieve → reflect loop is the product.
 - `wiki/LESSONS.md` is updated only through `/reflect`; never append raw notes.
 - Guard wiki page writes with `scripts/wiki-lock.sh acquire`/`release`.
 - Personal data (`wiki/`, `inbox/`, `.raw/`) is gitignored — never `git add -f` it.
+- This repo is its own testbed: when a session surfaces friction, a gap, or a
+  bug in the engine, fix it (or propose the fix) as part of that session —
+  the product improves through use.
 
 ## Setup
 

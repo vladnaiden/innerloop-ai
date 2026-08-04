@@ -22,11 +22,11 @@ The wiki compounds. Save often.
 
 The session-note write itself follows the standard transport policy. Read `.vault-meta/transport.json` (auto-created by `bash scripts/detect-transport.sh`):
 
-- **cli** — `obsidian-cli write "$VAULT" "$NOTE" < session.md`; see [`skills/wiki-cli/SKILL.md`](../wiki-cli/SKILL.md)
+- **cli** — `obsidian-cli write "$VAULT" "$NOTE" < session.md`; requires `obsidian-cli` installed
 - **mcp-obsidian** / **mcpvault** — `mcp__obsidian-vault__write_note`
 - **filesystem** — Claude's `Write` tool with absolute path
 
-Full decision tree: [`wiki/references/transport-fallback.md`](../../wiki/references/transport-fallback.md). Index/log/hot updates use the same transport.
+Full decision tree: header comments in `scripts/detect-transport.sh`. Index/log/hot updates use the same transport.
 
 ---
 
@@ -56,7 +56,7 @@ bash scripts/wiki-lock.sh release "$NOTE_PATH"
 
 For multi-file saves (e.g., session note + index update + log append), acquire each lock in sorted-path order to avoid deadlocks. Index/log/hot updates lock just like content pages.
 
-See `skills/wiki-ingest/SKILL.md` §Concurrency for the full lock semantics.
+See the `wiki-ingest` skill §Concurrency for the full lock semantics.
 
 ---
 
@@ -171,7 +171,7 @@ If it's already in the wiki, update the existing page instead of creating a dupl
 
 ## How to think (10-principle mapping)
 
-When working on this skill, apply the 10-principle loop. See [`skills/think/SKILL.md`](../think/SKILL.md) for the canonical framework.
+When working on this skill, apply the 10-principle loop below.
 
 | # | Principle | Application here |
 |---|-----------|-------------------|

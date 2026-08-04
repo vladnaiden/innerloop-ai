@@ -77,7 +77,7 @@ mkdir -p "$META_DIR" || {
 # Auto-detection still runs (to refresh CLI/Obsidian-running flags for visibility),
 # but PREFERRED and CHAIN are preserved from the existing file across both the
 # normal write path AND --force runs. Documented at
-# wiki/references/transport-fallback.md §Manual override.
+# the Manual override section below.
 MANUAL_OVERRIDE_FLAG=false
 MANUAL_OVERRIDE_PREFERRED=""
 MANUAL_OVERRIDE_CHAIN=""

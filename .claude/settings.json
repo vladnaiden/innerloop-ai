@@ -38,28 +38,17 @@
         ]
       }
     ],
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "[ -d .git ] || exit 0; [ -f .vault-meta/auto-commit.disabled ] && exit 0; if [ -x scripts/wiki-lock.sh ]; then LOCK_LIST=$(bash scripts/wiki-lock.sh list 2>/dev/null); LOCK_RC=$?; if [ \"$LOCK_RC\" != \"0\" ]; then mkdir -p .vault-meta 2>/dev/null; printf '%s wiki-lock list failed rc=%s; deferred auto-commit\\n' \"$(date '+%Y-%m-%dT%H:%M:%SZ')\" \"$LOCK_RC\" >> .vault-meta/hook.log 2>/dev/null; exit 0; fi; if [ -n \"$LOCK_LIST\" ]; then exit 0; fi; fi; git add -- wiki/ .raw/ .vault-meta/ 2>/dev/null && (git diff --cached --quiet -- wiki/ .raw/ .vault-meta/ || git commit -m \"wiki: auto-commit $(date '+%Y-%m-%d %H:%M')\" -- wiki/ .raw/ .vault-meta/ 2>/dev/null) || true"
-          }
-        ]
-      }
-    ],
     "Stop": [
       {
         "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "cd \"$PWD\" && [ -d wiki ] && [ -d .git ] && git diff --name-only HEAD 2>/dev/null | grep -q '^wiki/' && echo 'WIKI_CHANGED: Wiki pages were modified this session. Please update wiki/hot.md with a brief summary of what changed (under 500 words). Use the hot cache format: Last Updated, Key Recent Facts, Recent Changes, Active Threads. Keep it factual. Overwrite the file completely. It is a cache, not a journal.' || true"
+            "command": "[ -d wiki ] && [ -f wiki/hot.md ] && find wiki -name '*.md' ! -name 'hot.md' -newer wiki/hot.md -print -quit 2>/dev/null | grep -q . && echo 'WIKI_CHANGED: Wiki pages were modified this session. Please update wiki/hot.md with a brief summary of what changed (under 500 words). Use the hot cache format: Last Updated, Key Recent Facts, Recent Changes, Active Threads. Keep it factual. Overwrite the file completely. It is a cache, not a journal.' || true"
           },
           {
             "type": "prompt",
-            "prompt": "If this was a substantive session about the user (their goals, decisions, corrections, preferences) AND wiki/LESSONS.md exists, consider whether the reflect skill should run to consolidate what was learned into wiki/LESSONS.md and the vault. Only suggest it once, in one short line, if there is a real lesson or new durable fact to capture; if nothing material was learned, say nothing. Do not run reflect automatically — offer it."
+            "prompt": "Decide whether to interrupt this stop to suggest running the reflect skill. Any text you return blocks the stop and re-opens the conversation, so your default MUST be to approve the stop silently with no output at all — do not explain, justify, or state that reflection is premature. Block ONLY if ALL of these hold: (1) wiki/LESSONS.md exists; (2) this was a substantive session about the user (their goals, decisions, corrections, preferences) with real dialogue, not just explanations or hook feedback; (3) there is a concrete new lesson or durable fact worth consolidating; (4) the transcript does not already contain a stop-hook suggestion to reflect — suggest at most once per session. If you do block, return exactly one short line offering /reflect; never run it automatically."
           }
         ]
       }

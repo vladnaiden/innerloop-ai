@@ -26,7 +26,7 @@
 #   6. Run bm25-index.py build to build the inverted index.
 #
 # After completion the wiki-retrieve skill is "feature-detected" by other
-# skills (wiki-query checks for scripts/retrieve.py + .vault-meta/chunks/).
+# skills (callers check for scripts/retrieve.py + .vault-meta/chunks/).
 #
 # This is fully opt-in. Doing nothing leaves v1.6 behavior intact.
 #
@@ -228,5 +228,5 @@ say ""
 say "Usage from the command line:"
 say "  python3 scripts/retrieve.py \"your question here\" --top 5"
 say ""
-say "Other skills (wiki-query, autoresearch) will now automatically use the"
-say "hybrid pipeline when answering questions. See skills/wiki-retrieve/SKILL.md."
+say "The wiki-retrieve skill will now use the hybrid pipeline when answering"
+say "questions. See .claude/skills/wiki-retrieve/SKILL.md."

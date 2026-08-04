@@ -4,9 +4,8 @@
 Single source of truth for "which mode is this vault in" and "where should
 new content of type X be filed under mode Y." Consumed by:
 
-  - skills/wiki-ingest/SKILL.md  (where to file new source/entity/concept pages)
-  - skills/save/SKILL.md         (where to file session notes)
-  - skills/autoresearch/SKILL.md (where to file research output)
+  - .claude/skills/wiki-ingest/SKILL.md  (where to file new source/entity/concept pages)
+  - .claude/skills/save/SKILL.md         (where to file session notes)
   - bin/setup-mode.sh            (writes .vault-meta/mode.json)
 
 If `.vault-meta/mode.json` is absent → mode = "generic" → behavior identical
