@@ -49,10 +49,10 @@ Everything ships as standard Claude Code project config — no plugin install:
 - **Skills** (`.claude/skills/`): `/wiki-ingest`, `/save`, `/wiki-retrieve`,
   `/reflect` — auto-discovered by Claude Code.
 - **Hooks** (`.claude/settings.json`):
-  - `SessionStart` — loads `about-me.md` → `LESSONS.md` → `hot.md`, clears
-    stale wiki locks. Safe no-op when no vault exists.
-  - `PostCompact` — re-reads `hot.md` (hook-injected context doesn't survive
-    context compaction).
+  - `SessionStart` (startup, resume, and post-compaction) — loads
+    `about-me.md` → `LESSONS.md` → `hot.md`, clears stale wiki locks.
+    The `compact` matcher re-injects the context that compaction drops.
+    Safe no-op when no vault exists.
   - `Stop` — nudges a `hot.md` refresh when wiki pages changed this session,
     and offers `/reflect` after substantive sessions (never runs it silently).
 
