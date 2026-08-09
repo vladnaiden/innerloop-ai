@@ -42,7 +42,7 @@ That capture → structure → retrieve → reflect loop is the product.
   read-order contract. Do not load the whole vault.
 - `inbox/` is read-only source material — never modify it.
 - `wiki/LESSONS.md` is updated only through `/reflect`; never append raw notes.
-- Guard wiki page writes with `scripts/wiki-lock.sh acquire`/`release`.
+- Guard wiki page writes with `scripts/wiki-lock.sh acquire <path>`/`release <path>` (per-file; a bare `acquire` errors).
 - Personal data (`wiki/`, `inbox/`, `.raw/`) is gitignored — never `git add -f` it.
 - This repo is its own testbed: when a session surfaces friction, a gap, or a
   bug in the engine, fix it (or propose the fix) as part of that session —
@@ -52,6 +52,8 @@ That capture → structure → retrieve → reflect loop is the product.
 
 - Fresh clone: post-create seeds an empty brain from `templates/`.
 - Semantic rerank (optional, local, no egress): `bash bin/setup-embeddings.sh`.
+- Audio→text (optional, local, no egress): `bash bin/setup-transcribe.sh`, then
+  `bash scripts/transcribe.sh [--outdir DIR] <audio…>` (faster-whisper large-v3-turbo int8).
 - Retrieval index: `bash bin/setup-retrieve.sh`.
 - Vault methodology mode (LYT / PARA / Zettelkasten / generic): `bash bin/setup-mode.sh`.
 - Dated overview of all Claude sessions across projects: `bash bin/sessions-list.sh`

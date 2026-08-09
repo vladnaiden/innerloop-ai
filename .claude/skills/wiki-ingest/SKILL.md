@@ -247,6 +247,7 @@ Do not silently overwrite old claims. Flag and let the user decide.
 - Do not create duplicate pages. Always check the index and search before creating.
 - Do not skip the log entry. Every ingest must be recorded.
 - Do not skip the hot cache update. It is what keeps future sessions fast.
+- **Credentials filter (hard rule).** Source content containing credentials — passwords, API keys, access tokens, secret codes, card numbers, login+password dumps — is NOT processed at all. Do not extract, summarize, quote, or record the existence details (service names, logins) anywhere in the vault, log, hot cache, or agent digests. Skip the file/section silently; at most note "credential-bearing notes filtered" with no specifics. This also applies to sub-agent prompts: instruct digest agents to skip credential content.
 
 ---
 
