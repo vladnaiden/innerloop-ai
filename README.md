@@ -39,8 +39,9 @@ capture ──▶ structure ──▶ retrieve ──▶ reflect ──▶ (smar
    `process inbox`.
 4. Talk. After meaningful sessions, run `/reflect`.
 
-Your data (`wiki/`, `inbox/`) is gitignored — the engine is shareable, the
-brain is yours.
+Your data (`wiki/`, `inbox/`) is gitignored — the engine and the brain are
+cleanly separated, and git hooks (`scripts/githooks/`) block personal data
+and credentials from ever entering a commit or a push.
 
 ## How it's wired
 

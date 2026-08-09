@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Last line of defense before anything leaves the machine: refuses to push any
+# ref whose tree contains brain (personal data) paths — catches commits made
+# with --no-verify or from tools that bypassed the pre-commit hook.
+set -euo pipefail
+
+BLOCKED='^(wiki/|inbox/|\.raw/|\.vault-meta/|archive/|_templates/|\.obsidian/|repos/|_reference/|TASKS\.md$|\.claude/settings\.local\.json$)'
+ZERO=0000000000000000000000000000000000000000
+
+while read -r _local_ref local_sha _remote_ref _remote_sha; do
+  [ "$local_sha" = "$ZERO" ] && continue  # branch deletion
+  bad=$(git ls-tree -r --name-only "$local_sha" | grep -E "$BLOCKED" || true)
+  if [ -n "$bad" ]; then
+    {
+      echo "PUSH BLOCKED — the tree of $local_sha contains personal data:"
+      printf '  %s\n' $bad
+      echo "Remove these files from history before pushing."
+    } >&2
+    exit 1
+  fi
+done

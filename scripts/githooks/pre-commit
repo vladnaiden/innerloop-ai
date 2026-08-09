@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Blocks the brain (personal data) and obvious credentials from ever entering
+# a commit. Installed via `git config core.hooksPath scripts/githooks`
+# (post-create.sh does this on container creation).
+set -euo pipefail
+
+# Paths that must never be committed — not even with `git add -f`.
+BLOCKED='^(wiki/|inbox/|\.raw/|\.vault-meta/|archive/|_templates/|\.obsidian/|repos/|_reference/|TASKS\.md$|\.claude/settings\.local\.json$)'
+
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+bad=$(printf '%s\n' "$staged" | grep -E "$BLOCKED" || true)
+if [ -n "$bad" ]; then
+  {
+    echo "COMMIT BLOCKED — personal data (the brain) must never be committed:"
+    printf '  %s\n' $bad
+    echo "Unstage with: git restore --staged <path>"
+  } >&2
+  exit 1
+fi
+
+# Credential scan over added lines (hard rule: credentials are never processed,
+# and certainly never committed). Override for a confirmed false positive:
+#   INNERLOOP_ALLOW_SECRET_MATCH=1 git commit ...
+if [ "${INNERLOOP_ALLOW_SECRET_MATCH:-0}" != "1" ]; then
+  secrets=$(git diff --cached --diff-filter=ACMR -U0 | grep '^+' | grep -E -i \
+    -e 'BEGIN( RSA| EC| DSA| OPENSSH| PGP)? ?PRIVATE KEY' \
+    -e 'AKIA[0-9A-Z]{16}' \
+    -e 'ghp_[A-Za-z0-9]{36}' \
+    -e 'github_pat_[A-Za-z0-9_]{22,}' \
+    -e 'sk-(ant|proj|live)-[A-Za-z0-9_-]{16,}' \
+    -e 'xox[baprs]-[A-Za-z0-9-]{10,}' \
+    -e '(api[_-]?key|secret[_-]?key|access[_-]?token|auth[_-]?token|password|passwd)['"'"'" ]*[:=]['"'"'" ]*[A-Za-z0-9_/+.-]{12,}' \
+    || true)
+  if [ -n "$secrets" ]; then
+    {
+      echo "COMMIT BLOCKED — staged changes look like they contain credentials:"
+      printf '%s\n' "$secrets" | head -10 | sed 's/^/  /'
+      echo "Remove the secret. False positive? Re-run with INNERLOOP_ALLOW_SECRET_MATCH=1"
+    } >&2
+    exit 1
+  fi
+fi

@@ -43,6 +43,10 @@ fi
 # The workspace bind mount can have a different owner than the container user.
 git config --global --add safe.directory "$PWD"
 
+# Copy-protection hooks: pre-commit blocks brain paths + credentials from being
+# staged into a commit; pre-push refuses trees that contain personal data.
+git config core.hooksPath scripts/githooks
+
 # Home dir is ephemeral (only $CLAUDE_DIR is a volume), so the native install
 # in ~/.local must be redone after every rebuild. It shadows the root-owned
 # npm copy in /usr/local/bin and lets the auto-updater work without sudo.
