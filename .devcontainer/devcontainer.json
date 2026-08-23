@@ -1,23 +1,33 @@
 {
-  "name": "${localWorkspaceFolderBasename}",
+  // ── Project identity is FIXED here, never derived from the host folder ──
+  // Everything that must survive a move lives under this id: the container
+  // workspace path (which is what ~/.claude/projects/<slug> and the
+  // ~/.claude.json project key are computed from) and the named volumes.
+  // Deriving these from ${localWorkspaceFolderBasename} meant renaming the
+  // folder on the host silently orphaned session history and handed you empty
+  // volumes. Copying this .devcontainer into another repo: change "innerloop-ai"
+  // here (4 places) to that repo's id so the volumes stay unique per project.
+  "name": "innerloop-ai",
   "build": {
     "dockerfile": "Dockerfile"
   },
   "remoteUser": "node",
+  // Pinned so the repo always appears at the same path inside the container,
+  // wherever it sits on the host and whatever the folder is called.
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/innerloop-ai,type=bind,consistency=cached",
+  "workspaceFolder": "/workspaces/innerloop-ai",
   // Host-side, before the container starts: the shared session dir must exist,
   // otherwise Docker creates it root-owned on Linux hosts.
   "initializeCommand": "mkdir -p \"${HOME:?}/.claude/projects\"",
   "mounts": [
     // Persists container-local Claude state (credentials, settings, onboarding)
     // across container shutdown/rebuild. Named volumes survive `docker rm`.
-    // ${localWorkspaceFolderBasename} makes the volume unique per project, so
-    // this folder can be copied into any repo without collisions.
-    "source=${localWorkspaceFolderBasename}-claude-config,target=/home/node/.claude,type=volume",
+    "source=innerloop-ai-claude-config,target=/home/node/.claude,type=volume",
     // One shared session base across the host and every devcontainer: the
     // host's ~/.claude/projects is bind-mounted over the volume's projects dir.
     // HOME resolves on macOS/Linux, USERPROFILE on Windows (the other is empty).
     "source=${localEnv:HOME}${localEnv:USERPROFILE}/.claude/projects,target=/home/node/.claude/projects,type=bind",
-    "source=${localWorkspaceFolderBasename}-shell-history,target=/commandhistory,type=volume"
+    "source=innerloop-ai-shell-history,target=/commandhistory,type=volume"
     // No external knowledge-base mounts: the brain (wiki/ + inbox/) lives
     // INSIDE this repo, gitignored. Engine is public-shaped, data stays local.
   ],
