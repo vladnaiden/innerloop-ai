@@ -85,6 +85,15 @@ Reference implementation: `.devtools/affiliate-site/tests/layout.spec.ts`.
 Run it with the functional suite before every deploy; a passing screenshot
 review with a failing geometry test is still a failing design.
 
+## 2c. Accessibility — axe on every page, both viewports
+
+`npm i -D @axe-core/playwright`, then a `tests/a11y.spec.ts` that runs
+`new AxeBuilder({page}).withTags(["wcag2a","wcag2aa","wcag21a","wcag21aa"])`
+on every page and fails on `serious`/`critical`. Typical catches: muted grey
+text below 4.5:1 on tinted backgrounds (fix the `--muted` token, and never fade
+text with `opacity`), links in prose without underline, missing labels.
+Reference: `.devtools/affiliate-site/tests/a11y.spec.ts`.
+
 ## 3. Fix, deploy, reshoot
 
 Fix in CSS tokens/components (not per-page hacks). Build, run the project's
