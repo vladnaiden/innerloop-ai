@@ -64,6 +64,27 @@ one localized page if the site is multilingual.
 - `console.txt` clean. Localized pages: `html lang/dir` right, headers translated,
   no untranslated strings that were added later.
 
+## 2b. Measure — geometry tests, because eyes miss 3–7px
+
+Screenshots catch the big things; a 4.8px baseline offset or a 7px gutter
+mismatch only shows up when measured. Add a `tests/layout.spec.ts` (Playwright)
+that reads `getBoundingClientRect()` at phone/tablet/desktop and asserts:
+
+- **No horizontal overflow**: `scrollWidth <= clientWidth`, and no element's
+  right edge past the viewport (except inside intentional scroll containers).
+- **One content column**: nav inner edge, content edge, and footer edge all
+  equal (compare *content-box* edges: left + padding-left), column centred.
+- **Lines are lines**: group items by vertical centre; within a line the
+  centres differ by ≤2px (top bar, filter row, footer language row, nav).
+- **One control height**: buttons, dropdown triggers, steppers in a toolbar
+  all the same height ±2px (fix with a `--ctl-h` token, not per-element).
+- **Tables**: each header cell's x and width equal its body cell's ±1px;
+  the first column's text edge equals the toolbar gutter above it.
+
+Reference implementation: `.devtools/affiliate-site/tests/layout.spec.ts`.
+Run it with the functional suite before every deploy; a passing screenshot
+review with a failing geometry test is still a failing design.
+
 ## 3. Fix, deploy, reshoot
 
 Fix in CSS tokens/components (not per-page hacks). Build, run the project's
