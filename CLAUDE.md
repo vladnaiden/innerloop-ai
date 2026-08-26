@@ -35,6 +35,24 @@ That capture → structure → retrieve → reflect loop is the product.
 | `/save` | File the current conversation as a structured wiki note |
 | `/wiki-retrieve` | Hybrid BM25 + contextual + cosine-rerank retrieval over the vault |
 | `/reflect` | Self-learning loop → `wiki/LESSONS.md` + vault facts |
+| `inbox-audit` | "What's left / are you sure 100%?" → per-file reconciliation (`scripts/inbox-audit.py`), then process by type |
+| `session-sweep` | Export all containers' sessions, fan out readers, surface repeats/corrections → skills + reflect |
+| `career-map` | "Knowing me, where do I fit / what value / which path" — fixed vault read set + one number from his data |
+| `job-scan` | Live Djinni/DOU/remote-board scan → CSV in inbox → fit table → bare apply URLs |
+| `reddit-leads` | Fresh low-competition posts by non-technical people who need him → bare https list |
+| `anonfetch-scrape` | Every scrape: pool check, throttle triage, probe → selectors → small batches |
+| `site-adapter-pipeline` | Per-site scraper: catalog → probe → adapter → raw HTML → DB → XLSX |
+| `trend-gap-scan` | Run the existing gap/trend scanners and verify sources — never rebuild |
+| `api-connector` | Add an API + credential to api-mcp as YAML, test via CLI, no secret echo |
+| `site-ops` | Build/deploy/verify blog + affiliate site on Vercel; DNS, analytics, SEO, redirects |
+| `expose-local` | Cloudflare quick tunnel + QR for phone testing; verify; tear down |
+| `checkpoint-refactor` | Git checkpoint + tag before any refactor/fix; regression run; clean rollback |
+| `cc-defaults` | Bypass mode + Remote Control off in any container (`bin/setup-claude-defaults.sh`); port check |
+| `verify-before-claim` | No "done/works/100%" without fresh evidence; "are you sure?" → verified vs unverified |
+| `design-loop` | Screenshot → critique → fix → redeploy loop for any site (desktop + mobile) |
+
+Skills were derived from a sweep of 60+ sessions (25.08.2026, `session-sweep`); their
+`description` fields carry his actual trigger wording, including Ukrainian.
 
 ## Rules for Claude
 
@@ -44,9 +62,49 @@ That capture → structure → retrieve → reflect loop is the product.
 - `wiki/LESSONS.md` is updated only through `/reflect`; never append raw notes.
 - Guard wiki page writes with `scripts/wiki-lock.sh acquire <path>`/`release <path>` (per-file; a bare `acquire` errors).
 - Personal data (`wiki/`, `inbox/`, `.raw/`) is gitignored — never `git add -f` it.
+- The same prompt arriving 5–13× within minutes is a 529 storm, not insistence —
+  say once "N identical prompts, treating as one", run the work detached with
+  resumable state, and never redo a harvest.
+- No `sleep` longer than 5 minutes; poll with `scripts/wait-for-pool.sh` or a
+  `Monitor`. He reads long silent waits as idle. Never `pkill -f <pattern that
+  appears in your own command line>` — it killed its own shell four times.
+- Any refactor / "make it agnostic" / "fix without breaking" starts with a git
+  checkpoint (`checkpoint-refactor`); any "done" ends with fresh evidence
+  (`verify-before-claim`).
 - This repo is its own testbed: when a session surfaces friction, a gap, or a
   bug in the engine, fix it (or propose the fix) as part of that session —
   the product improves through use.
+
+
+## Parsing — drift watch (mandatory before and during any scrape)
+
+Extractors built from the schema go blind to whatever the schema lacks. Run the
+watcher instead of trusting a fixed field list. Global rule in `~/.claude/CLAUDE.md`.
+
+```bash
+# teach it a source (needs >=2 saved pages, so boilerplate can be found by diff)
+node .devtools/schema_watch.js learn <source> page1.html page2.html
+
+# what does this page publish that no rule claims?
+node .devtools/schema_watch.js check <source> page.html   # exit 2 = needs review
+
+# current label -> column map
+node .devtools/schema_watch.js rules [source]
+
+# sample live pages for every profiled source and report drift
+bash .devtools/watch_sources.sh
+```
+
+- Rules live in `.devtools/extract_rules.json` (`label -> column`; `null` = ignore
+  deliberately). Adding a rule is a data edit.
+- Profiles in `.devtools/.schema-profiles/<source>.json`.
+- `unmapped_check.js <page.html>` is the quick one-page version: it reports apply
+  links, socials, emails, prose and other content a rate-focused parser skips.
+- Novelty >=20% means stop and look. It found `Affiliate Managers` on a live page
+  that existed in no other sample.
+- A rebuild that only changes class hashes must score ~0%: build-generated classes
+  are stripped and boilerplate is keyed on text. Verify this still holds after
+  editing the fingerprint.
 
 ## Setup
 
@@ -73,6 +131,16 @@ That capture → structure → retrieve → reflect loop is the product.
   `.devcontainer` into another repo: change the `innerloop-ai` id in it.
   `bash bin/relocate.sh --fix --from /old/path` repairs state left over from a move
   made *before* the pin existed (renames the session dir, re-keys `.claude.json`).
+- **Data catalog — що в нас уже є з даних**: `wiki/sources/data-catalog.md` —
+  авто-згенерований реєстр усіх датасетів (Postgres `host.docker.internal:5432/app`
+  з Reddit-корпусом `rd_*` ~940k постів, скрейпи djinni/dou/work.ua, sqlite-бази
+  радарів, корпуси розмов, tech-horizon CSV). Оновлюється на кожному SessionStart
+  (`scripts/data-catalog.py scan --quiet`). **Перед тим як щось скрейпити або
+  збирати — перевір каталог: дані, можливо, вже є.** Схема будь-якого файлу:
+  `python3 scripts/data-catalog.py describe <path>`; опис/refresh-команда:
+  `... set <path> description|refresh_cmd|refresh_days <value>`; прострочені:
+  `... refresh --stale`. Каталог зберігає лише структуру (шляхи, таблиці,
+  колонки, лічильники) — ніколи вміст рядків і ніколи креденшили.
 - Dated overview of all Claude sessions across projects: `bash bin/sessions-list.sh`
   (`-a` = all, or a substring to filter by project).
 - Archive session transcripts as ingestable source: `bash scripts/export-sessions.sh`
@@ -83,6 +151,11 @@ That capture → structure → retrieve → reflect loop is the product.
   credentials on the way out** (name=value secrets, `curl -u user:pass`, vendor
   token prefixes, long opaque mixed-case runs) — the vault must never receive them.
   Run it before a session scan: without it, history exists only as raw jsonl.
+  **It already covers every devcontainer**: `~/.claude/projects` is a bind mount
+  from the host, so all containers write their transcripts to one shared
+  directory — no per-container pass is needed. It also drops harness chatter
+  (`<task-notification>`, slash-command wrappers) that otherwise counts as fake
+  user turns.
 - Reddit people-finder — scores buying-intent signals and returns a contact
   shortlist, not posts: `python3 scripts/reddit-signals.py` (presets: money,
   igaming, rag; `--self-test` validates the classifier offline, no network).
@@ -108,13 +181,22 @@ That capture → structure → retrieve → reflect loop is the product.
   - The response payload arrives under `html` / `text`, **not** `body`, and
     `truncated: true` means the JSON is cut at `maxChars` — parse that and you
     get a crash instead of an empty result.
-  - **Keep it slow.** A burst of ~40 probe requests got the NordVPN account
-    throttled, and while throttled *every* exit fails identically
-    (`ERR_BAD_RESPONSE: stream has been aborted`) — which reads like a
-    site-wide block but is the provider. `anonfetch_status`'s `diagnosis`
-    field names it correctly; back off a few minutes. Aborted streams also
-    show up sporadically on healthy pools (anonfetch does not spoof TLS/JA3);
-    the built-in retries absorb them.
+  - **The "throttle" is Nord's per-account *session cap*, not a request rate
+    (measured 25.08.2026 with curl straight at the exits: `407` +
+    `X-Proxy-Error: session_limit_reached`).** Every distinct proxy server the
+    account authenticates against holds a session slot for a while after use;
+    once the ~10 slots are full, *every* exit — including ones that worked a
+    minute earlier — answers 407 until sessions expire (observed 20+ min); a
+    warm exit meanwhile takes 10 back-to-back requests without complaint.
+    Old builds showed it as `ERR_BAD_RESPONSE: stream has been aborted`; the
+    server now reports `PROXY_AUTH_REJECTED`, serves warm exits first,
+    introduces a cold one at most every 15 s (`warmTarget` 6 — keep it under
+    the device limit; other tools on the same creds share it) and none while 407s arrive
+    (`anonfetch_status` → `proxy.warm`, `proxy.authThrottledForMs`,
+    `diagnosis`). Never fight it by rotating harder or minting identities in
+    bulk; back off on the same exit (`anonfetch_client.py` does: 15/30/60/105 s).
+    Aborted streams also show up sporadically on healthy pools (anonfetch does
+    not spoof TLS/JA3); the built-in retries absorb them.
   - **Verified 2026-08-22:** exits rotate (`--check` → 3/3 distinct exit IPs
     out of the pool; dozens of distinct exits across runs), the token POST
     reaches Reddit (dummy creds → clean HTTP 401), `oauth.reddit.com` answers
@@ -125,10 +207,11 @@ That capture → structure → retrieve → reflect loop is the product.
     `REDDIT_CLIENT_ID` / `REDDIT_CLIENT_SECRET` (no `.env` exists yet).
   - **Reachability is intermittent even on a healthy pool.** In one window all
     the probes above passed; twenty minutes later 4 of 5 exits aborted mid-
-    stream with `anonfetch_status` reporting no systemic failure. Run `--check`
-    until it comes back green *before* spending a scan, and keep the default
-    `--rotation sticky` so a working exit gets reused instead of re-gambling
-    every request.
+    stream with `anonfetch_status` reporting no systemic failure — in hindsight
+    the auth limit above. Run `--check` until it comes back green *before*
+    spending a scan, and keep the default `--rotation sticky` so a working exit
+    gets reused instead of re-gambling every request. Fewer distinct exit IPs
+    than samples in `--check` is now expected, not a defect.
   - **Unauthenticated Reddit through these exits (verified 2026-08-22): only
     `.rss` works.** `/r/X/new.json` → 403; `www.reddit.com` HTML search → 200
     but a JS shell with zero content (shreddit renders client-side);
