@@ -100,6 +100,17 @@ bash .devtools/watch_sources.sh
 - Profiles in `.devtools/.schema-profiles/<source>.json`.
 - `unmapped_check.js <page.html>` is the quick one-page version: it reports apply
   links, socials, emails, prose and other content a rate-focused parser skips.
+- **Staleness is explicit.** Every parsed row carries `parser_version` (a hash of the
+  parser code, see `.devtools/parser_version.js`) and `parsed_at`. A row whose version
+  differs from the current parser was produced by older code; `reparse_stored.js`
+  fixes those offline when the raw page is stored, and `requeue_stale.js` re-fetches
+  the ones it cannot (no stored page, or older than `--max-age-days`, default 14).
+  `node .devtools/requeue_stale.js --report` shows the distribution.
+- **The program page must render every stored, non-internal field as explicit, labelled
+  rows.** The owner asked for "show everything" AND (to the web session) to remove the
+  generic "All stored fields / completeness %" block — so new columns get explicit `kv()`
+  rows in `app/[lang]/affiliate-program/[slug]/page.tsx`, never a dumped list. Before
+  aliasing a build to the domain, run the site's Playwright gate (`npm run test:e2e`).
 - Novelty >=20% means stop and look. It found `Affiliate Managers` on a live page
   that existed in no other sample.
 - A rebuild that only changes class hashes must score ~0%: build-generated classes

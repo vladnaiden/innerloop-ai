@@ -40,6 +40,19 @@
   "remoteEnv": {
     "HISTFILE": "/commandhistory/.bash_history"
   },
+  // Ports published so an app started in here is reachable from the host
+  // browser AND from a session running in a sibling devcontainer (which sees
+  // it as host.docker.internal:<port>). Without this, a dev server is visible
+  // only to processes inside this container. Bind servers to 0.0.0.0, not
+  // 127.0.0.1, or the forward has nothing to attach to.
+  "forwardPorts": [3000, 3001, 5173, 8000, 8080],
+  "portsAttributes": {
+    "3000": { "label": "app (next/node)", "onAutoForward": "notify" },
+    "3001": { "label": "app alt", "onAutoForward": "silent" },
+    "5173": { "label": "vite", "onAutoForward": "silent" },
+    "8000": { "label": "python/http", "onAutoForward": "silent" },
+    "8080": { "label": "misc http", "onAutoForward": "silent" }
+  },
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "customizations": {
     "vscode": {

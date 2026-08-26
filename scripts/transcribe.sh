@@ -37,6 +37,11 @@ model = None
 for f in sys.argv[1:]:
     if not os.path.isfile(f) or os.path.getsize(f) == 0:
         print(f"SKIP (missing/empty): {f}", file=sys.stderr); fail += 1; continue
+    # Resume: a non-empty transcript already there means this file is done.
+    # Long batches get OOM-killed or interrupted; re-invoking must not redo them.
+    done_path = os.path.join(outdir, f"audio-{os.path.splitext(os.path.basename(f))[0]}.md")
+    if os.path.isfile(done_path) and os.path.getsize(done_path) > 0:
+        ok += 1; continue
     if model is None:
         model = WhisperModel("large-v3-turbo", device="cpu", compute_type="int8")
     try:
