@@ -89,7 +89,10 @@ async function upsert(db, row, slug, url, fetchedAt) {
     if (LIMIT && n >= LIMIT) break; n++;
     let html, fetchedAt;
     const p = rawPath(t.slug);
-    if (REPARSE && fs.existsSync(p)) { html = zlib.gunzipSync(fs.readFileSync(p)).toString(); fetchedAt = state.done[t.slug]?.fetched || null; }
+    // a stored page that is only stale by parser version is re-read from disk, not re-fetched
+    const d = state.done[t.slug];
+    const fromDisk = REPARSE || (d && d.pv !== PV && now - d.at <= MAX_AGE);
+    if (fromDisk && fs.existsSync(p)) { html = zlib.gunzipSync(fs.readFileSync(p)).toString(); fetchedAt = d?.fetched || null; }
     else {
       const t0 = Date.now();
       try { const r = await af.get(t.url, { tries: 3, gapBase: 3000 }); html = r.html || r.text || ""; metric({ ev: "fetch", ok: true, ms: Date.now() - t0, offers: 1 }); }
