@@ -106,6 +106,10 @@ replays stored pages offline; `--max-age-days` re-fetches old ones.
 | `cpa_rip` | cpa.rip | EN/RU network catalogue: payouts, payout systems, socials, user rating | ~480 |
 | `gdeslon` | gdeslon.ru/offers | RU network offers: commission span, 6-month conversion/EPC/AOV, coupons | ~220 |
 | `epn` | epn.bz/ru/offers | ePN's curated programmes: rate, approval, conversion, payment term, cookie, legal entity | 15 |
+| `cpainform_offers` | cpainform.ru/programs | RU offer monitor: per-network goal rows (rating, action, access, GEO, payout in RUB) | ~6,100 |
+| `affiliatekatalog` | affiliatekatalog.com | CZ/SK programmes: commission %, cookie days, sign-up + product links | ~900 |
+| `ehub` | ehub.cz catalogues (7 markets) | eHUB campaigns table: brand, category, PPS %, attribution window, market | ~750+ |
+| `affiliateprograms_com` | affiliateprograms.com/p | editorial directory: base commission, payment frequency/type, countries | ~310 |
 | `tradetracker` | tradetracker.com/<cc>/campaigns | 25 markets × categories: brand, logo, blurb, network — **first 12 per category only** (load-more is client-side), no commissions | partial |
 
 Rejected after probing: getlasso.co / affiliateprogramdb.com (403 on every exit),

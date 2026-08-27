@@ -17,7 +17,7 @@ module.exports = {
   parse(html, url) {
     const h = String(html);
     const name = text(between(h, '<h1 class="subheader__caption">', "</h1>").replace(/^[^>]*>/, ""));
-    const desc = text(between(h, "<h2>POPIS PROGRAMU</h2>", "</div>").replace(/<br\s*\/?>/g, " · "));
+    const desc = text(between(h, "<h2>POPIS PROGRAMU</h2>", "</div>").replace(/^<h2>POPIS PROGRAMU<\/h2>/, "").replace(/<br\s*\/?>/g, " · "));
     const nums = Object.fromEntries([...h.matchAll(/<strong>([^<]*)<\/strong><small>([^<]*)<\/small>/g)].map((m) => [text(m[2]), text(m[1])]));
     const signup = (h.match(/href="([^"]+)"[^>]*class="detail-info__btn text-uppercase"/) || [])[1] || null;
     const landing = (h.match(/href="([^"]+)"[^>]*class="detail-info__btn detail-info__btn--secondary[^"]*"/) || [])[1] || null;
