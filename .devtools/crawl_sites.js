@@ -60,7 +60,7 @@ async function upsert(db, row, slug, url, fetchedAt) {
     const fill = COLS.map((c, i) => `${c} = COALESCE(mr_program.${c}, $${i + 6})`).join(", ");
     await db.query(
       `UPDATE mr_program SET ${fill}, extra = COALESCE(extra,'{}'::jsonb) || jsonb_build_object('also_on', COALESCE(extra->'also_on','[]'::jsonb) || jsonb_build_array($2::text)), last_checked = now()
-       WHERE domain = $3 AND program_name = $4 AND slug <> $1`, base);
+       WHERE domain = $3 AND program_name = $4 AND slug <> $1 AND $5::jsonb IS NOT NULL`, base);
     metric({ ev: "merged", slug, domain, name });
     return "merged";
   }
