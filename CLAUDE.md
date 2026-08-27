@@ -95,12 +95,16 @@ replays stored pages offline; `--max-age-days` re-fetches old ones.
 | `uaff` | uaff.media | UA networks (terms, EST year, ratings) | ~170 |
 | `cpad` / `cpad_offers` | cpad.pro | CIS network monitor (offer counts, payouts, 3 ratings) / offers with per-network goal rows | 58 / ~5,200 |
 | `affdays` | affdays.com | comparison tables per niche (one record per row) | ~24 pages |
-| `partnerkin` | partnerkin.com | RU networks: params, criteria ratings, reviews count, awards, rep | ~1,500 |
+| `partnerkin` | partnerkin.com | RU networks: params, criteria ratings, reviews count, awards, rep | ~860 |
+| `tradedoubler` | directory.tradedoubler.com | EU programmes per market: commissions per segment, cookie, currency, traffic rules | ~2,700 |
+| `leads_su` | leads.su | RU finance offers: payouts per action, EPC/CR/AR, hold | ~720 |
 
 Rejected after probing: getlasso.co / affiliateprogramdb.com (403 on every exit),
 gdetraffic.com (article feed, not a catalogue), theaffiliateslist (paywalled),
 Chinese CPS networks (duomai / yiqifa / linktech are login-only JS shells — no public
-advertiser list exists to parse).
+advertiser list exists to parse), adtraction (brand cards load via /ajax/, no HTML),
+daisycon (JS-rendered list), admitad (no public catalogue any more), mylead (404),
+webepartners (≈15 programmes).
 
 ## Parsing — drift watch (mandatory before and during any scrape)
 
