@@ -26,7 +26,7 @@ process.on("exit", () => { try { if (Number(fs.readFileSync(LOCK, "utf8")) === p
 const PV = crypto.createHash("sha1").update(fs.readFileSync(path.join(__dirname, "sites", `${SITE}.js`), "utf8") + fs.readFileSync(path.join(__dirname, "sites", "_common.js"), "utf8")).digest("hex").slice(0, 10);
 const metric = (o) => { try { fs.appendFileSync(METRICS, JSON.stringify({ t: new Date().toISOString(), job: SITE, ...o }) + "\n"); } catch {} };
 const load = () => { try { return JSON.parse(fs.readFileSync(STATE, "utf8")); } catch { return { done: {}, failed: {} }; } };
-const save = (s) => { fs.writeFileSync(STATE + ".tmp", JSON.stringify(s)); fs.renameSync(STATE + ".tmp", STATE); };
+const save = (s) => { const tmp = `${STATE}.${process.pid}.tmp`; fs.writeFileSync(tmp, JSON.stringify(s)); fs.renameSync(tmp, STATE); };
 const rawPath = (slug) => path.join(RAW, `${slug.replace(/[^a-z0-9._-]+/gi, "_")}.html.gz`);
 
 const COLS = ["landing_url", "signup_url", "logo_url", "description", "network", "categories", "commission", "commission_type",
