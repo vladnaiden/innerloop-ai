@@ -4,8 +4,9 @@ const { text, between, decode, host } = require("./_common");
 module.exports = {
   name: "epn", lang: "ru", region: "CIS", base: "https://epn.bz",
   async list(af) {
-    const r = await af.get(`${this.base}/sitemap.xml`, { tries: 2 });
-    return [...(r.html || r.text || "").matchAll(/<loc>(https:\/\/epn\.bz\/ru\/offers\/([a-z0-9_-]+)\/?)<\/loc>/g)].map((m) => ({ url: m[1], slug: m[2] }));
+    // ePN publishes only a curated rating page (~15 programmes); the sitemap holds none
+    const r = await af.get(`${this.base}/ru/offers`, { tries: 2 });
+    return [...(r.html || "").matchAll(/href="\/ru\/offers\/([a-z0-9_-]+)"/g)].map((m) => m[1]).filter((v, i, a) => a.indexOf(v) === i).map((s) => ({ url: `${this.base}/ru/offers/${s}`, slug: s }));
   },
   parse(html, url) {
     const h = String(html);

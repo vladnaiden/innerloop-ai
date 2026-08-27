@@ -104,6 +104,8 @@ replays stored pages offline; `--max-age-days` re-fetches old ones.
 | `affiliate_marketing_de` | affiliate-marketing.de | DACH merchants: one row per network programme (commission span, SEM, tracking, feeds, territories) | thousands |
 | `clubaffiliation` | clubaffiliation.com | FR programmes: CPC/CPS/CPA terms, start date, diffusion rules (ISO-8859-1 source) | ~1,700 |
 | `cpa_rip` | cpa.rip | EN/RU network catalogue: payouts, payout systems, socials, user rating | ~480 |
+| `gdeslon` | gdeslon.ru/offers | RU network offers: commission span, 6-month conversion/EPC/AOV, coupons | ~220 |
+| `epn` | epn.bz/ru/offers | ePN's curated programmes: rate, approval, conversion, payment term, cookie, legal entity | 15 |
 | `tradetracker` | tradetracker.com/<cc>/campaigns | 25 markets × categories: brand, logo, blurb, network — **first 12 per category only** (load-more is client-side), no commissions | partial |
 
 Rejected after probing: getlasso.co / affiliateprogramdb.com (403 on every exit),
