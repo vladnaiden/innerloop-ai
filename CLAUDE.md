@@ -98,6 +98,7 @@ replays stored pages offline; `--max-age-days` re-fetches old ones.
 | `partnerkin` | partnerkin.com | RU networks: params, criteria ratings, reviews count, awards, rep | ~860 |
 | `tradedoubler` | directory.tradedoubler.com | EU programmes per market: commissions per segment, cookie, currency, traffic rules | ~2,700 |
 | `leads_su` | leads.su | RU finance offers: payouts per action, EPC/CR/AR, hold | ~720 |
+| `tradetracker` | tradetracker.com/<cc>/campaigns | 25 markets × categories: brand, logo, blurb, network — **first 12 per category only** (load-more is client-side), no commissions | partial |
 
 Rejected after probing: getlasso.co / affiliateprogramdb.com (403 on every exit),
 gdetraffic.com (article feed, not a catalogue), theaffiliateslist (paywalled),
