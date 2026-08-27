@@ -101,6 +101,9 @@ replays stored pages offline; `--max-age-days` re-fetches old ones.
 | `postaffiliatepro` | postaffiliatepro.com/affiliate-program-directory | ~2,300 programmes: industry, model, cookie, traffic, payouts, tracking software, named manager | ~2,300 |
 | `conversion_im` | conversion.im | RU CPA-network rating: verticals, payout terms, methods, review tone counts | 232 |
 | `affhub` | affhub.media | UA media catalogue of programmes: profile, site, Telegram | 226 |
+| `affiliate_marketing_de` | affiliate-marketing.de | DACH merchants: one row per network programme (commission span, SEM, tracking, feeds, territories) | thousands |
+| `clubaffiliation` | clubaffiliation.com | FR programmes: CPC/CPS/CPA terms, start date, diffusion rules (ISO-8859-1 source) | ~1,700 |
+| `cpa_rip` | cpa.rip | EN/RU network catalogue: payouts, payout systems, socials, user rating | ~480 |
 | `tradetracker` | tradetracker.com/<cc>/campaigns | 25 markets × categories: brand, logo, blurb, network — **first 12 per category only** (load-more is client-side), no commissions | partial |
 
 Rejected after probing: getlasso.co / affiliateprogramdb.com (403 on every exit),
