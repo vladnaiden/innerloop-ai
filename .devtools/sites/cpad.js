@@ -28,7 +28,7 @@ module.exports = {
     const rv = Object.values(ratings);
     return {
       program_name: name || null, domain: `cpad.${url.split("/").pop()}`, signup_url: signup ? this.base + signup : null, landing_url: null,
-      description: [text(between(h, "Регистрация в", 'class="b-shadow').replace(/^[^>]*>/, "").replace(/^[^<]*→\s*<\/a>/, "")).slice(0, 1500), bullets.join(" · ")].filter((x) => x && x.length > 20).join(" — ") || (h.match(/<meta name="description" content="([^"]*)"/) || [])[1] || null,
+      description: [text(between(h, 'class="typography color-gray-dark"', "</div>").replace(/^[^>]*>/, "")).slice(0, 1500), bullets.join(" · ")].filter((x) => x && x.length > 20).join(" — ") || null,
       offers_count: active ?? total, payment_methods: methods.length ? methods : null, min_payment_raw: minp ? text(minp) : null,
       payment_frequency: freq ? `${freq} в месяц` : null, referral_commission: ref ? `${ref}%` : null,
       rating_avg: rv.length ? Math.round(rv.reduce((a, b) => a + b, 0) / rv.length * 10) / 10 : null,
