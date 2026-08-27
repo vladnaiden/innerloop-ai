@@ -76,6 +76,32 @@ Skills were derived from a sweep of 60+ sessions (25.08.2026, `session-sweep`); 
   the product improves through use.
 
 
+## Directory sources (added 27.08.2026) — `.devtools/crawl_sites.js`
+
+One runner, one module per site in `.devtools/sites/<name>.js` (`{name, lang, region,
+list(af), parse(html, url)}`; `parse` may return an array for table pages). The runner
+owns pacing, raw HTML (`raw_pages/<site>/<slug>.html.gz`), resumable state + per-site
+lock (`.sites-state/`), provenance (`extra.provenance`, `source_url`, `parser_version`
+= hash of the module, `parsed_at`) and the upsert (slug `<site>-<slug>`; a brand that
+already exists from another source is *filled*, never duplicated — `extra.also_on`).
+`sites_cycle.sh` runs a bounded pass per site inside the supervisor; `--reparse`
+replays stored pages offline; `--max-age-days` re-fetches old ones.
+
+| module | source | what | size |
+|---|---|---|---|
+| `pp100` | 100partnerprogramme.de | DACH programmes: rate, model, cookie, network, categories, products table, SEM rules | ~2,100 |
+| `affililist` | affililist.com | SaaS/creator programmes (JSON-LD Organization + tiles) | ~1,000 |
+| `palai` / `palai_offers` | palai.media | UA networks (managers, payouts) / iGaming offers with conditions | 79 / ~1,900 |
+| `uaff` | uaff.media | UA networks (terms, EST year, ratings) | ~170 |
+| `cpad` / `cpad_offers` | cpad.pro | CIS network monitor (offer counts, payouts, 3 ratings) / offers with per-network goal rows | 58 / ~5,200 |
+| `affdays` | affdays.com | comparison tables per niche (one record per row) | ~24 pages |
+| `partnerkin` | partnerkin.com | RU networks: params, criteria ratings, reviews count, awards, rep | ~1,500 |
+
+Rejected after probing: getlasso.co / affiliateprogramdb.com (403 on every exit),
+gdetraffic.com (article feed, not a catalogue), theaffiliateslist (paywalled),
+Chinese CPS networks (duomai / yiqifa / linktech are login-only JS shells — no public
+advertiser list exists to parse).
+
 ## Parsing — drift watch (mandatory before and during any scrape)
 
 Extractors built from the schema go blind to whatever the schema lacks. Run the

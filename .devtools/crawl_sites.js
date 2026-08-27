@@ -38,7 +38,8 @@ async function upsert(db, row, slug, url, fetchedAt) {
   const name = row.program_name; if (!name) throw new Error("no program_name");
   const fullSlug = `${SITE}-${slug}`.toLowerCase().slice(0, 120);
   const extra = { ...(row.extra || {}), provenance: { site: SITE, url, fetched_at: fetchedAt } };
-  const vals = COLS.map((c) => c === "tags" ? (row.tags || []) : (row[c] === undefined ? null : row[c]));
+  // a parser that computed NaN has no value, not a broken one — never let it reach Postgres
+  const vals = COLS.map((c) => c === "tags" ? (row.tags || []) : (row[c] === undefined || (typeof row[c] === "number" && !Number.isFinite(row[c])) ? null : row[c]));
   const sets = COLS.map((c, i) => `${c} = $${i + 6}`).join(", ");
   const base = [fullSlug, url, domain, name, JSON.stringify(extra), ...vals];
   // 1. our own row (by slug) — plain overwrite, this parser owns it

@@ -13,7 +13,7 @@ module.exports = {
     const name = text(between(h, "<h1", "</h1>").replace(/^<h1[^>]*>/, "").replace(/<span[\s\S]*$/, ""));
     const item = (label) => between(between(h, `offer-item__title">${label}`, "</div> </div>"), "", "");
     const offersBlock = item("Офферов");
-    const nums = (re) => { const m = h.match(re); return m ? parseInt(m[1].replace(/\s/g, ""), 10) : null; };
+    const nums = (re) => { const m = h.match(re); if (!m) return null; const n = parseInt(m[1].replace(/[^\d]/g, ""), 10); return Number.isFinite(n) ? n : null; };
     const active = nums(/Активных:\s*([\d\s]+)</), archive = nums(/В архиве:\s*([\d\s]+)</), total = nums(/Итого:\s*([\d\s]+)</);
     const methods = [...between(h, 'offer-item__title">Вывод средств', "</div> </div>").matchAll(/<span class="info-point__tooltip"><span>([^<]*)</g)].map((m) => text(m[1]));
     const pay = text(between(h, 'offer-item__title">Платежи', "</div> </div>"));
