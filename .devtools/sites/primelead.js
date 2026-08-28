@@ -4,19 +4,11 @@
 const { text, decode, between } = require("./_common");
 module.exports = {
   name: "primelead", lang: "ru", region: "UA", base: "https://primelead.com.ua",
-  async list(af) {
-    const out = new Map();
-    let last = 1;
-    for (let p = 1; p <= Math.min(last, 60); p++) {
-      const r = await af.get(`${this.base}/master/offers?page=${p}`, { tries: 2 });
-      const h = r.html || r.text || "";
-      const ids = [...h.matchAll(/href="\/offer\/(\d+)"/g)].map((m) => m[1]);
-      for (const id of ids) out.set(id, { url: `${this.base}/offer/${id}`, slug: id });
-      for (const m of h.matchAll(/\/master\/offers\?page=(\d+)/g)) last = Math.max(last, +m[1]);
-      if (!ids.length) break;
-      await af.pace(1500);
-    }
-    return [...out.values()];
+  // The catalogue pager is session-bound (the same ids come back for most `page=` values through
+  // rotating exits), while offer ids are small and dense — so enumerate ids directly; 404s are
+  // recorded as gone by the runner and never re-fetched.
+  async list() {
+    return Array.from({ length: 320 }, (_, i) => ({ url: `${this.base}/offer/${i + 1}`, slug: String(i + 1) }));
   },
   urlFor(slug) { return `${this.base}/offer/${slug}`; },
   parse(html, url) {
