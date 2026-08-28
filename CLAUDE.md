@@ -122,6 +122,7 @@ replays stored pages offline; `--max-age-days` re-fetches old ones.
 | `affcatalog` | affcatalog.com/en/aff-program | iGaming programmes: terms table (min payout, frequency, negative balance, admin fee, software, licence, cookie, conversion window, CPA/RevShare/Sub-aff, founded), payment methods, brands, target/forbidden GEOs | ~1,460 |
 | `aff_studio` | aff.studio/directory/affiliate-program | iGaming programme profiles: details grid (commission type/details, payout frequency, min payout, admin fee, negative balance, cookie, licence, founded, software), target GEOs, brands, house grade, rating | ~785 |
 | `reditus` | getreditus.com/affiliate-programs | B2B SaaS programmes: commission, commission length, cookie window, network, payouts, official apply link | ~165 |
+| `afftank` | afftank.com/review | ~210 network reviews: offers count, rate, referral %, tracking, minimum, frequency, methods, named managers with email + Telegram | ~210 |
 | `tradetracker` | tradetracker.com/<cc>/campaigns | 25 markets × categories: brand, logo, blurb, network — **first 12 per category only** (load-more is client-side), no commissions | partial |
 
 Rejected after probing: getlasso.co / affiliateprogramdb.com (403 on every exit),
@@ -129,7 +130,7 @@ gdetraffic.com (article feed, not a catalogue), theaffiliateslist (paywalled),
 Chinese CPS networks (duomai / yiqifa / linktech are login-only JS shells — no public
 advertiser list exists to parse), adtraction (brand cards load via /ajax/, no HTML),
 daisycon (JS-rendered list), admitad (no public catalogue any more), mylead (404),
-webepartners (≈15 programmes), financeAds (public showcase is 8 programmes; the 500+ are behind login), letmeads (3), affylist (JS, 5 MB pages), wowtrk (Cloudflare challenge), annonsering.se (login since 2019), dognet (single >5 MB page — over the anonfetch cap).
+webepartners (≈15 programmes), financeAds (public showcase is 8 programmes; the 500+ are behind login), letmeads (3), affylist (JS, 5 MB pages), wowtrk (Cloudflare challenge), annonsering.se (login since 2019), dognet (single >5 MB page — over the anonfetch cap), affbun (Cloudflare challenge on every exit), casinoaffiliateprograms.com (522), GPWA (403), AffiliateGuardDog (forum).
 
 ## Parsing — drift watch (mandatory before and during any scrape)
 
