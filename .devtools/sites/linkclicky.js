@@ -7,7 +7,7 @@ module.exports = {
   async list(af) {
     const out = [];
     for (let n = 1; n <= 20; n++) {
-      let r; try { r = await af.get(`${this.base}/affiliate-program-sitemap${n}.xml`, { tries: 2 }); } catch (e) { if (/HTTP 404/.test(e.message)) break; throw e; }
+      let r; try { r = await af.get(`${this.base}/affiliate-program-sitemap${n}.xml`, { tries: 2, maxChars: 5000000 }); } catch (e) { if (/HTTP 404/.test(e.message)) break; throw e; }
       const locs = [...(r.html || r.text || "").matchAll(/<loc>(https:\/\/linkclicky\.com\/affiliate-program\/([a-z0-9-]+)\/)<\/loc>/g)];
       if (!locs.length) break;
       for (const m of locs) if (m[2] !== "feed") out.push({ url: m[1], slug: m[2] });

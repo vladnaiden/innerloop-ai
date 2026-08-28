@@ -35,7 +35,7 @@ module.exports = {
     const geo = text(decode(between(art, 'id="wmOffers-geo-info"', "</div>").replace(/<[^>]+>/g, " "))).replace(/^Geo targeting:\s*/, "");
     const desc = text(decode(between(art, "<h4>Description:</h4>", /<h4>(Landings|Additional conditions|Offer news)/.test(art) ? "<h4>" + (art.match(/<h4>(Landings|Additional conditions|Offer news)/) || [])[1] : "</article>").replace(/<\/(p|li|br)>|<br\s*\/?>/g, " · ").replace(/<[^>]+>/g, " "))).replace(/(\s*·\s*){2,}/g, " · ").replace(/^(\s*·\s*)+|(\s*·\s*)+$/g, "");
     const cond = text(decode(between(art, "<h4>Additional conditions:</h4>", "<h4>").replace(/<[^>]+>/g, " ")));
-    const pcts = aims.map((a) => parseFloat(a.payment)).filter((x) => /%/.test(aims.find((a) => parseFloat(a.payment) === x).payment) && !isNaN(x));
+    const pcts = aims.filter((a) => /%/.test(a.payment)).map((a) => parseFloat(a.payment)).filter((x) => !isNaN(x));
     const flats = aims.filter((a) => !/%/.test(a.payment)).map((a) => parseFloat(a.payment.replace(/[^\d.]/g, ""))).filter((x) => !isNaN(x));
     const comm = aims.map((a) => `${a.aim}: ${a.payment}${a.currency && !/%/.test(a.payment) ? " " + a.currency : ""}`).join("; ");
     const type = /\bCPL\b/.test(name) ? "CPL" : pcts.length ? "CPS" : flats.length ? "CPA" : null;
