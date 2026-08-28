@@ -125,6 +125,7 @@ replays stored pages offline; `--max-age-days` re-fetches old ones.
 | `afftank` | afftank.com/review | ~210 network reviews: offers count, rate, referral %, tracking, minimum, frequency, methods, named managers with email + Telegram | ~210 |
 | `affiliate_watch2` | affiliate.watch/affiliate | 916 programmes from the page's Inertia JSON: join link, earnings teaser, cookie, launch year, socials, AI rating /100, payment methods, categories, tags (replaces the thin legacy adapter) | 916 |
 | `uppromote` | uppromote.com/affiliate-directory | ~780 programmes: commission, cookie, regions, website, niche, platform, join link, editorial feature tables | ~780 |
+| `partnerstack_market` | market.partnerstack.com/page | PartnerStack public marketplace: offer structure, commission length, cookie, payout method/timing, attribution, features | ~400 |
 | `tradetracker` | tradetracker.com/<cc>/campaigns | 25 markets × categories: brand, logo, blurb, network — **first 12 per category only** (load-more is client-side), no commissions | partial |
 
 Rejected after probing: getlasso.co / affiliateprogramdb.com (403 on every exit),
