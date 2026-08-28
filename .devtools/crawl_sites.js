@@ -58,9 +58,13 @@ async function upsert(db, row, slug, url, fetchedAt) {
     if (e.code !== "23505") throw e;
     // 2. the same brand already exists from another source (domain, program_name):
     //    fill only its empty fields and record that this source also lists it.
-    const fill = COLS.map((c, i) => `${c} = COALESCE(mr_program.${c}, $${i + 6})`).join(", ");
+    // an authoritative module (a detail page replacing a listing stub) overwrites and takes ownership;
+    // otherwise only the brand's empty fields are filled and the extra source is recorded
+    const fill = site.authoritative
+      ? COLS.map((c, i) => `${c} = $${i + 6}`).join(", ") + `, site_adapter = '${SITE}', detail_url = $2, source_url = $2, source_endpoint = 'GET ' || $2, parser_version = '${PV}', parsed_at = now(), extra = COALESCE(extra,'{}'::jsonb) || $5::jsonb`
+      : COLS.map((c, i) => `${c} = COALESCE(mr_program.${c}, $${i + 6})`).join(", ") + `, extra = COALESCE(extra,'{}'::jsonb) || jsonb_build_object('also_on', COALESCE(extra->'also_on','[]'::jsonb) || jsonb_build_array($2::text))`;
     await db.query(
-      `UPDATE mr_program SET ${fill}, extra = COALESCE(extra,'{}'::jsonb) || jsonb_build_object('also_on', COALESCE(extra->'also_on','[]'::jsonb) || jsonb_build_array($2::text)), last_checked = now()
+      `UPDATE mr_program SET ${fill}, last_checked = now()
        WHERE domain = $3 AND program_name = $4 AND slug <> $1 AND $5::jsonb IS NOT NULL`, base);
     metric({ ev: "merged", slug, domain, name });
     return "merged";

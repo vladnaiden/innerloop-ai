@@ -7,7 +7,7 @@ const { text, between, decode } = require("./_common");
 const BASE = "https://best-affiliate-programs.net";
 const SEEDS = ["3081212", "2769151", "2851875", "2843757", "3066979", "2917159", "2990319", "3077327", "3031183", "2812108", "3031180", "3059461", "3058086", "3031179", "2758174", "3031185", "3031176"];
 module.exports = {
-  name: "bap_detail", lang: "en", region: "global", base: BASE,
+  name: "bap_detail", lang: "en", region: "global", base: BASE, authoritative: true, // detail pages replace listing stubs
   async list(af, db) {
     const ids = new Set(SEEDS);
     try { for (const r of (await db.query(`SELECT extra->>'bap_id' AS id FROM mr_program WHERE site_adapter = 'bap_list' AND extra ? 'bap_id'`)).rows) if (r.id) ids.add(r.id); } catch {}
