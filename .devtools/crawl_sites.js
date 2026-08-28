@@ -129,8 +129,11 @@ async function upsert(db, row, slug, url, fetchedAt) {
       state.done[t.slug] = { url: t.url, at: Date.now(), pv: PV, fetched: fetchedAt }; delete state.failed[t.slug];
       if (n % 25 === 0) console.log(`  ${n}/${todo.length} · ${JSON.stringify(counts)}`);
     } catch (e) {
-      counts.failed++; state.failed[t.slug] = { url: t.url, at: Date.now(), reason: "parse: " + String(e.message).slice(0, 80) };
-      metric({ ev: "parse_fail", slug: t.slug, reason: String(e.message).slice(0, 60) });
+      if (e.gone) { state.done[t.slug] = { url: t.url, at: Date.now(), pv: PV, gone: true }; delete state.failed[t.slug]; counts.skipped++; }
+      else {
+        counts.failed++; state.failed[t.slug] = { url: t.url, at: Date.now(), reason: "parse: " + String(e.message).slice(0, 80) };
+        metric({ ev: "parse_fail", slug: t.slug, reason: String(e.message).slice(0, 60) });
+      }
     }
     save(state);
   }
