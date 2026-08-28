@@ -31,7 +31,7 @@ module.exports = {
     const exclusive = /Exclusive to webgains/i.test(h);
     return {
       program_name: name, domain: site ? host(site) : `webgains.${url.split("/").pop()}`, landing_url: site, signup_url: url,
-      description: (desc || summary).slice(0, 4000) || null, network: "Webgains",
+      description: (desc || summary).replace(/^Programme description\s*·?\s*/, "").slice(0, 4000) || null, network: "Webgains",
       commission: comm || null, commission_type: /%/.test(comm) ? "CPS" : comm ? "CPA" : null,
       pct_min: pct.pct_min ?? null, pct_max: pct.pct_max ?? null, currency: kv["Currency"] || null,
       cookie_days: cookie ? +cookie[1] : null, cookie_length_raw: kv["Cookie period"] || null,
