@@ -22,7 +22,7 @@ module.exports = {
     const graph = ldjson(h).flatMap((j) => j["@graph"] || [j]);
     const biz = graph.find((g) => g["@type"] === "LocalBusiness" || g["@type"] === "Organization");
     if (!biz || !biz.name) throw new Error("no profile entity (category page)");
-    const about = text(between(h, 'class="froala-data field-about_me"', "</div></div>").replace(/<\/(p|li|h\d)>/g, " · "));
+    const about = text(between(h, 'class="froala-data field-about_me"', "</div></div>").replace(/^[^>]*>/, "").replace(/<\/(p|li|h\d)>/g, " · "));
     const specs = [...between(h, 'id="div2"', 'id="div6"').matchAll(/specialty-name[^>]*>\s*<a[^>]*>([^<]*)<\/a>/g)].map((m) => text(m[1])).filter((v, i, a) => v && a.indexOf(v) === i);
     const kind = /\/affiliate-networks\//.test(url) ? "network" : "program";
     const site = (h.match(/class="[^"]*website[^"]*"[^>]*href="(https?:\/\/(?!www\.affnext)[^"]+)"/) || h.match(/href="(https?:\/\/(?!www\.affnext\.com)[^"]+)"[^>]*>\s*(?:Visit|Website)/i) || [])[1] || null;
