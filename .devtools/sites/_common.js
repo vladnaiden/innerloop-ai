@@ -3,7 +3,7 @@
 // (commission / cookie), never from a nearby figure.
 const decode = (s) => String(s || "")
   .replace(/&amp;/g, "&").replace(/&#37;/g, "%").replace(/&nbsp;/g, " ").replace(/&quot;/g, '"')
-  .replace(/&#x27;|&#39;/g, "'").replace(/&euro;/g, "€").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+  .replace(/&#x27;|&#39;/g, "'").replace(/&euro;/g, "€").replace(/&mdash;/g, "—").replace(/&ndash;/g, "–").replace(/&laquo;/g, "«").replace(/&raquo;/g, "»").replace(/&hellip;/g, "…").replace(/&rsquo;/g, "’").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
   .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(+n)).replace(/&shy;/g, "");
 const text = (h) => decode(String(h || "").replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<svg[\s\S]*?<\/svg>/g, " ")
   .replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim();

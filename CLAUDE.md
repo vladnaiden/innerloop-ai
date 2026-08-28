@@ -110,6 +110,8 @@ replays stored pages offline; `--max-age-days` re-fetches old ones.
 | `affiliatekatalog` | affiliatekatalog.com | CZ/SK programmes: commission %, cookie days, sign-up + product links | ~900 |
 | `ehub` | ehub.cz catalogues (7 markets) | eHUB campaigns table: brand, category, PPS %, attribution window, market | ~750+ |
 | `affiliateprograms_com` | affiliateprograms.com/p | editorial directory: base commission, payment frequency/type, countries | ~310 |
+| `cpainform_networks` | cpainform.ru/networks | RU networks: site, opened, offers count, rating /100, payout methods/terms, engine, vertical mix | ~225 |
+| `offers_help` | offers.help | EN iGaming/CPA offers from 25 networks: goals (type, price, currency), GEOs, traffic types (from __NEXT_DATA__; API keys never stored) | ~2,700 |
 | `tradetracker` | tradetracker.com/<cc>/campaigns | 25 markets × categories: brand, logo, blurb, network — **first 12 per category only** (load-more is client-side), no commissions | partial |
 
 Rejected after probing: getlasso.co / affiliateprogramdb.com (403 on every exit),
