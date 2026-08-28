@@ -7,13 +7,16 @@ const { text, between, decode, host } = require("./_common");
 module.exports = {
   name: "affcatalog", lang: "en", region: "global", base: "https://affcatalog.com", maxChars: 3000000,
   async list(af) {
+    // the HTML listing ignores ?page; the site's own public JSON API paginates (49 pages × 30)
     const out = new Map();
-    for (let p = 1; p <= 80; p++) {
-      let r; try { r = await af.get(`${this.base}/en/aff-program/${p > 1 ? `?page=${p}` : ""}`, { tries: 2 }); } catch { break; }
-      const links = [...(r.html || "").matchAll(/href="\/en\/aff-program\/([a-z0-9-]+)\/?"/g)].map((m) => m[1]);
-      let fresh = 0; for (const s of links) if (!out.has(s)) { out.set(s, { url: `${this.base}/en/aff-program/${s}/`, slug: s }); fresh++; }
-      if (!links.length || (p > 1 && !fresh)) break;
-      await af.pace(2000);
+    for (let p = 1; p <= 200; p++) {
+      let j; try { const r = await af.tool("fetch_url", { url: `https://api.affcatalog.com/api/v1/filters/aff-program?per_page=30&page=${p}`, returnBody: "text", maxChars: 900000, retries: 2, blockRules: ["http-status"] }); j = JSON.parse(r.text || "{}"); } catch { break; }
+      const ld = (j.data || {}).listingsData || j.data || {};
+      const items = Array.isArray((ld.meta || {}).data) ? ld.meta.data : Array.isArray(ld.data) ? ld.data : Object.values(ld).find(Array.isArray) || [];
+      let fresh = 0;
+      for (const it of items) { const slug = it.slug || it.alias || (typeof it.url === "string" ? it.url.replace(/\/$/, "").split("/").pop() : null); if (slug && !out.has(slug)) { out.set(slug, { url: `${this.base}/en/aff-program/${slug}/`, slug }); fresh++; } }
+      const meta = ld.meta || {}; if (!items.length || !fresh || (meta.last_page && p >= meta.last_page)) break;
+      await af.pace(1500);
     }
     return [...out.values()];
   },
