@@ -23,8 +23,8 @@ module.exports = {
     for (const m of tabs.matchAll(/<b>([^<]+?):?\s*<\/b>\s*([\s\S]*?)(?=<br\s*\/?>|<\/div>|<\/p>)/g)) { const v = text(dec(m[2]).replace(/<[^>]+>/g, " ")); if (v) kv[text(m[1]).replace(/:$/, "")] = v; }
     const signup = (tabs.match(/Přihlášení do affil\. programu:<\/b>\s*<a href="\s*([^"\s]+)\s*"/) || [])[1] || null;
     const descHtml = between(tabs, "Popis provizního programu:</b>", '<div id="tab-Provize"') || "";
-    const desc = text(dec(descHtml.replace(/<\/p>|<br\s*\/?>/g, " · ").replace(/<[^>]+>/g, " "))).replace(/(\s*·\s*){2,}/g, " · ").replace(/^(\s*·\s*)+|(\s*·\s*)+$/g, "");
-    const forb = text(dec((between(tabs, "Zakázané způsoby propagace:</b>", "</div>") || "").replace(/<[^>]+>/g, " ")));
+    const desc = text(dec(descHtml.replace(/<\/p>|<br\s*\/?>/g, " · ").replace(/<[^>]+>/g, " "))).replace(/(\s*·\s*){2,}/g, " · ").replace(/^(\s*·\s*)+|(\s*·\s*)+$/g, "").replace(/^Popis provizního programu:\s*·?\s*/, "");
+    const forb = text(dec((between(tabs, "Zakázané způsoby propagace:</b>", "</div>") || "").replace(/<[^>]+>/g, " "))).replace(/^Zakázané způsoby propagace:\s*/, "");
     const rating = (h.match(/Rating:\s*([\d.]+)\/<strong>10<\/strong>\s*\((\d+) votes/) || []);
     const comm = kv["Výše provize"] || "";
     const pcts = [...comm.matchAll(/(\d+(?:[.,]\d+)?)\s*%/g)].map((x) => parseFloat(x[1].replace(",", ".")));
@@ -37,7 +37,7 @@ module.exports = {
       program_name: name, domain: site || (/\.[a-z]{2,}$/i.test(name.split(/\s/)[0]) ? name.split(/\s/)[0].toLowerCase() : `e-provize.${url.split("/").filter(Boolean).pop()}`), landing_url: site ? `https://${site}` : null, signup_url: signup || url,
       description: desc.slice(0, 4000) || null, network: kv["Affiliate síť / platforma"] && !/^(vlastní|žádná|ne)$/i.test(kv["Affiliate síť / platforma"]) ? kv["Affiliate síť / platforma"] : null,
       commission: comm || null, commission_type: /obratu|prodej/i.test(kv["Typ zisku"] || "") || pcts.length ? "CPS" : /lead|registrac/i.test(kv["Typ zisku"] || "") ? "CPL" : kc ? "CPA" : null,
-      pct_min: pcts.length ? Math.min(...pcts) : null, pct_max: pcts.length ? Math.max(...pcts) : null, flat_min: kc ? parseInt(kc[1].replace(/\s/g, ""), 10) : null, flat_max: kc ? parseInt(kc[1].replace(/\s/g, ""), 10) : null, currency: kc || minp ? "CZK" : null,
+      pct_min: pcts.length ? Math.min(...pcts) : null, pct_max: pcts.length ? Math.max(...pcts) : null, flat_min: kc ? parseInt(kc[1].replace(/\s/g, ""), 10) : null, flat_max: kc ? parseInt(kc[1].replace(/\s/g, ""), 10) : null, currency: kc ? "CZK" : null,
       cookie_days: cookie ? +cookie[1] : null, cookie_length_raw: kv["Platnost cookies"] || null,
       min_payout: minp ? parseInt(minp[1].replace(/\s/g, ""), 10) : null, min_payment_raw: kv["Výplatní minimum a způsob vyplácení"] || null,
       established_year: kv["Rok založení"] && /^\d{4}$/.test(kv["Rok založení"]) ? +kv["Rok založení"] : null,
