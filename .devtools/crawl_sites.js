@@ -102,14 +102,17 @@ async function upsert(db, row, slug, url, fetchedAt) {
       await af.pace(3000);
     }
     try {
+      const tp = Date.now();
       const parsed = site.parse(html, t.url);
       // a listing-style page may yield many records; each gets its own slug
       const rows = Array.isArray(parsed) ? parsed : [parsed];
       if (!rows.length) throw new Error("no records on page");
+      const tu = Date.now();
       for (let i = 0; i < rows.length; i++) {
         const what = await upsert(db, rows[i], Array.isArray(parsed) ? `${t.slug}-${rows[i].key || i + 1}` : t.slug, t.url, fetchedAt);
         counts[what]++;
       }
+      metric({ ev: "timing", parse_ms: tu - tp, upsert_ms: Date.now() - tu, rows: rows.length });
       state.done[t.slug] = { url: t.url, at: Date.now(), pv: PV, fetched: fetchedAt }; delete state.failed[t.slug];
       if (n % 25 === 0) console.log(`  ${n}/${todo.length} · ${JSON.stringify(counts)}`);
     } catch (e) {

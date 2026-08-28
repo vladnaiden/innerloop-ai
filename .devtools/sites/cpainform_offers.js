@@ -14,9 +14,17 @@ module.exports = {
     const info = Object.fromEntries([...between(h, 'class="program-info"', "</table>").matchAll(/<th[^>]*>([^<]*)<\/th>\s*<td>([\s\S]*?)<\/td>/g)].map((m) => [text(m[1]).replace(/:$/, ""), text(m[2])]));
     const dates = [...between(h, 'class="program-info"', "</table>").matchAll(/<time datetime="([^"]+)"/g)].map((m) => m[1].slice(0, 10));
     const desc = text(between(h, "Описание:", "</tr>").replace(/^[^>]*>/, "")).replace(/^Описание:\s*/, "");
-    const rows = [...between(h, 'id="sort-goals"', "</table>").matchAll(/<tr>\s*<td>\s*<a href="[^"]*\/networks\/([a-z0-9_-]+)\/">([^<]*)<\/a>\s*<\/td>\s*<td[^>]*>\s*([^<]*?)\s*<\/td>\s*<td>\s*([\s\S]*?)\s*<\/td>\s*<td[^>]*>([^<]*)<\/td>\s*<td[^>]*>([\s\S]*?)<\/td>\s*<td class="text-right[^"]*">\s*([\d.,]+)\s*<small[^>]*>([A-Z]{3})<\/small>/g)]
-      .map((m) => ({ network: text(m[2]), network_slug: m[1], network_rating: parseInt(m[3], 10) || null, action: text(m[4]), access: text(m[5]), geo: text(m[6]).split(/[\s,]+/).map((g) => g.trim()).filter((g) => /^[A-Z]{2}$/.test(g)), payout: parseFloat(m[7].replace(",", ".")), currency: m[8] }));
-    const pay = rows.map((r) => r.payout).filter((n) => n > 0);
+    // row by row, cell by cell — a single table-wide regex backtracked for 90 s on some pages
+    const rows = between(h, 'id="sort-goals"', "</table>").split(/<tr>/).slice(1).map((tr) => {
+      const tds = [...tr.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map((x) => x[1]);
+      if (tds.length < 6) return null;
+      const net = tds[0].match(/\/networks\/([a-z0-9_-]+)\/">([^<]*)</);
+      const pay = tds[5].match(/([\d.,]+)\s*<small[^>]*>([A-Z]{3})/);
+      return { network: net ? text(net[2]) : text(tds[0]), network_slug: net ? net[1] : null, network_rating: parseInt(text(tds[1]), 10) || null,
+        action: text(tds[2]), access: text(tds[3]), geo: text(tds[4]).split(/[\s,]+/).map((g) => g.trim()).filter((g) => /^[A-Z]{2}$/.test(g)),
+        payout: pay ? parseFloat(pay[1].replace(",", ".")) : null, currency: pay ? pay[2] : null };
+    }).filter(Boolean);
+    const pay = rows.map((r) => r.payout).filter((n) => n != null && n > 0);
     const nets = rows.map((r) => r.network).filter((v, i, a) => v && a.indexOf(v) === i);
     const geos = rows.flatMap((r) => r.geo).filter((v, i, a) => /^[A-Z]{2}$/.test(v) && a.indexOf(v) === i);
     const cat = (info["Категория"] || "").replace(/\s*»\s*/g, " › ");
@@ -24,7 +32,7 @@ module.exports = {
       program_name: name || null, domain: `cpainform-offer.${url.replace(/\/$/, "").split("/").slice(-2).join("-")}`, signup_url: url, landing_url: null,
       description: desc.slice(0, 3000) || null, vertical: cat.split(" › ")[0] || null, categories: cat ? cat.split(" › ") : null,
       network: nets.join(", ").slice(0, 200) || null, commission_type: "CPA",
-      currency: rows[0] ? rows[0].currency : null, flat_min: pay.length ? Math.min(...pay) : null, flat_max: pay.length ? Math.max(...pay) : null,
+      currency: (rows.find((r) => r.currency) || {}).currency || null, flat_min: pay.length ? Math.min(...pay) : null, flat_max: pay.length ? Math.max(...pay) : null,
       countries: geos.length ? geos : null, source_updated: dates[1] || dates[0] || null, offers_count: null,
       numbers: rows.length ? { goals: rows } : null,
       extra: { kind: "offer", added: dates[0], networks: nets, goals_count: rows.length, offers_total_on_site: (text(h).match(/Офферы\s+([\d\s]+)\s+Тизерки/) || [])[1]?.replace(/\s/g, "") },
