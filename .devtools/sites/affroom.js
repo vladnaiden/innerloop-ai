@@ -25,7 +25,7 @@ module.exports = {
     const desc = text(between(h, 'class="post-content"', 'class="table-of-contents').replace(/<div class="smiley-rating"[\s\S]*?<\/div><\/div><\/div>/, "").replace(/^[^>]*>/, "").replace(/<\/(p|li|h\d)>/g, " · ")).replace(/^What do you think\?[\s\S]*?(?=[A-Z][a-z]+ [a-z])/, "").slice(0, 3000);
     return {
       program_name: name, domain: site ? host(site) : `affroom.${url.replace(/\/$/, "").split("/").pop()}`, signup_url: site, landing_url: null, logo_url: page.thumbnailUrl || null,
-      description: desc || null, vertical: (opts["Vertical"] || [])[0] || null, categories: opts["Vertical"] || null,
+      description: desc && !/^(Leave the email|What do you think)/.test(desc) ? desc : null, vertical: (opts["Vertical"] || [])[0] || null, categories: opts["Vertical"] || null,
       commission_type: models.join(", ") || null, commission_types: models.length ? models : null,
       countries: cc.length ? cc : null, geo: (opts["Countries"] || []).join(", ") || null, min_payment_raw: (opts["Minimum payouts"] || []).join(", ") || null,
       payment_methods: opts["Payment methods"] || opts["Payment Methods"] || null, payment_frequency: (opts["Payment Frequency"] || [])[0] || null,
