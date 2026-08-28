@@ -127,7 +127,8 @@ replays stored pages offline; `--max-age-days` re-fetches old ones.
 | `uppromote` | uppromote.com/affiliate-directory | ~780 programmes: commission, cookie, regions, website, niche, platform, join link, editorial feature tables | ~780 |
 | `partnerstack_market` | market.partnerstack.com/page | PartnerStack public marketplace: offer structure, commission length, cookie, payout method/timing, attribution, features | ~400 |
 | `affiliateroll` | affiliateroll.com/programs | curated directory: commission, type, cookie, minimum payout, payment methods, launch year, benefits | ~165 |
-| `bap_list` | best-affiliate-programs.net (Livewire) | 45,413 programmes, 20 per component POST: name, blurb, models, indicator values, detail URL — the runner's `site.fetch()` hook owns the Livewire session | ~45,000 |
+| `bap_list` | best-affiliate-programs.net (Livewire) | only the first page is reachable from outside (the component ignores `page` updates and `search()` returns 0 without the site's session) — kept for the seed ids | 17 |
+| `bap_detail` | best-affiliate-programs.net/programs/x/<id> | 45,413 programme pages walked as a graph (each page links ~10 related programmes; `next()` returns them all): tags, parameters (status, currency, CPA/CPL, RevShare, bonuses), supported/forbidden countries, last update | ~45,000 |
 | `tradetracker` | tradetracker.com/<cc>/campaigns | 25 markets × categories: brand, logo, blurb, network — **first 12 per category only** (load-more is client-side), no commissions | partial |
 
 Rejected after probing: getlasso.co / affiliateprogramdb.com (403 on every exit),
