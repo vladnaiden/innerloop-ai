@@ -113,6 +113,8 @@ replays stored pages offline; `--max-age-days` re-fetches old ones.
 | `cpainform_networks` | cpainform.ru/networks | RU networks: site, opened, offers count, rating /100, payout methods/terms, engine, vertical mix | ~225 |
 | `offers_help` | offers.help | EN iGaming/CPA offers from 25 networks: goals (type, price, currency), GEOs, traffic types (from __NEXT_DATA__; API keys never stored) | ~2,700 |
 | `affbank` | affbank.com/offers/<network> | offer aggregator, ~37k rows from per-network listings (id, name, network, GEO, category, payout); the runner follows `next()` pagination | ~37,000 |
+| `admitad_store` | admitad.ru/store/offers | Admitad public showcase: EPC, CR, approval %, processing time, regions, tools, categories (rates are login-only, not claimed) | ~680 |
+| `affnext` | affnext.com | programmes + networks: LD-JSON profile, specialties (no figures — prose only) | ~1,150 |
 | `tradetracker` | tradetracker.com/<cc>/campaigns | 25 markets × categories: brand, logo, blurb, network — **first 12 per category only** (load-more is client-side), no commissions | partial |
 
 Rejected after probing: getlasso.co / affiliateprogramdb.com (403 on every exit),
