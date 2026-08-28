@@ -75,7 +75,7 @@ async function upsert(db, row, slug, url, fetchedAt) {
   let targets;
   if (REPARSE) {
     // a page that never parsed has no `done` entry — its URL lives in `failed`
-    targets = fs.readdirSync(RAW).filter((f) => f.endsWith(".html.gz")).map((f) => { const s = f.replace(/\.html\.gz$/, ""); return { slug: s, url: state.done[s]?.url || state.failed[s]?.url || null }; }).filter((t) => t.url);
+    targets = fs.readdirSync(RAW).filter((f) => f.endsWith(".html.gz")).map((f) => { const s = f.replace(/\.html\.gz$/, ""); return { slug: s, url: state.done[s]?.url || state.failed[s]?.url || (site.urlFor ? site.urlFor(s) : null) }; }).filter((t) => t.url);
   } else {
     targets = await site.list(af);
     console.log(`${SITE}: ${targets.length} programme URLs listed`);

@@ -4,6 +4,7 @@
 const { text, between, decode, host } = require("./_common");
 module.exports = {
   name: "admitad_store", lang: "ru", region: "CIS", base: "https://www.admitad.ru",
+  urlFor(slug) { return `${this.base}/store/offers/${slug}/`; },
   async list(af) {
     const out = [];
     for (let i = 1; i <= 8; i++) {
