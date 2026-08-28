@@ -113,6 +113,8 @@ async function upsert(db, row, slug, url, fetchedAt) {
         counts[what]++;
       }
       metric({ ev: "timing", parse_ms: tu - tp, upsert_ms: Date.now() - tu, rows: rows.length });
+      // paginated listings: the module may name the next page, which joins the queue
+      if (typeof site.next === "function") { const nx = site.next(html, t.url); if (nx && nx.url && !state.done[nx.slug] && !todo.some((x) => x.slug === nx.slug)) todo.push(nx); }
       state.done[t.slug] = { url: t.url, at: Date.now(), pv: PV, fetched: fetchedAt }; delete state.failed[t.slug];
       if (n % 25 === 0) console.log(`  ${n}/${todo.length} · ${JSON.stringify(counts)}`);
     } catch (e) {

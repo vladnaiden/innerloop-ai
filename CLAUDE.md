@@ -81,7 +81,7 @@ Skills were derived from a sweep of 60+ sessions (25.08.2026, `session-sweep`); 
 One runner, one module per site in `.devtools/sites/<name>.js` (`{name, lang, region,
 list(af), parse(html, url)}`; `parse` may return an array for table pages). The runner
 owns pacing, raw HTML (`raw_pages/<site>/<slug>.html.gz`), resumable state + per-site
-lock (`.sites-state/`), provenance (`extra.provenance`, `source_url`, `parser_version`
+lock (`.sites-state/`), listing pagination via an optional `next(html, url)` on the module, provenance (`extra.provenance`, `source_url`, `parser_version`
 = hash of the module, `parsed_at`) and the upsert (slug `<site>-<slug>`; a brand that
 already exists from another source is *filled*, never duplicated — `extra.also_on`).
 `sites_cycle.sh` runs a bounded pass per site inside the supervisor; `--reparse`
@@ -112,6 +112,7 @@ replays stored pages offline; `--max-age-days` re-fetches old ones.
 | `affiliateprograms_com` | affiliateprograms.com/p | editorial directory: base commission, payment frequency/type, countries | ~310 |
 | `cpainform_networks` | cpainform.ru/networks | RU networks: site, opened, offers count, rating /100, payout methods/terms, engine, vertical mix | ~225 |
 | `offers_help` | offers.help | EN iGaming/CPA offers from 25 networks: goals (type, price, currency), GEOs, traffic types (from __NEXT_DATA__; API keys never stored) | ~2,700 |
+| `affbank` | affbank.com/offers/<network> | offer aggregator, ~37k rows from per-network listings (id, name, network, GEO, category, payout); the runner follows `next()` pagination | ~37,000 |
 | `tradetracker` | tradetracker.com/<cc>/campaigns | 25 markets × categories: brand, logo, blurb, network — **first 12 per category only** (load-more is client-side), no commissions | partial |
 
 Rejected after probing: getlasso.co / affiliateprogramdb.com (403 on every exit),
