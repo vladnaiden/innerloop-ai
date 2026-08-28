@@ -20,8 +20,8 @@ module.exports = {
     const months = (offer + " " + tx).match(/first (\d+) months/i);
     const payout = (tx.match(/How do I get paid\?\s*(.+?)\s*When do I get paid/) || [])[1] || null;
     const timing = (tx.match(/When do I get paid\?\s*(.+?)\s*How long do cookies/) || [])[1] || null;
-    const attribution = text(between(h, 'data-test="referral-container"', "</div>").replace(/<[^>]+>/g, " ")).replace(/^This program accepts customer referrals by:\s*/, "");
-    const features = text(between(h, 'data-test="features-container"', "</div>").replace(/<[^>]+>/g, " ")).replace(/^Program features:\s*/, "");
+    const attribution = text(between(h, 'data-test="referral-container"', "</div>").replace(/^[^>]*>/, "").replace(/<[^>]+>/g, " ")).replace(/^This program accepts customer referrals by:\s*/, "");
+    const features = text(between(h, 'data-test="features-container"', "</div>").replace(/^[^>]*>/, "").replace(/<[^>]+>/g, " ")).replace(/^Program features:\s*/, "");
     const pct = /%/.test(offer) ? pctRange(offer) : {}; const usd = offer.match(/\$\s*([\d,]+(?:\.\d+)?)/);
     const methods = payout ? ["PayPal", "Stripe", "Wire", "Payoneer"].filter((m) => new RegExp(m, "i").test(payout)) : [];
     return {
