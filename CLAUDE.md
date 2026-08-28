@@ -117,6 +117,8 @@ replays stored pages offline; `--max-age-days` re-fetches old ones.
 | `affnext` | affnext.com | programmes + networks: LD-JSON profile, specialties (no figures — prose only) | ~1,150 |
 | `businessofapps` | businessofapps.com/affiliate | affiliate-network profiles: tagline, rating /10 + votes, sign-up link, models mentioned | ~125 |
 | `afftrends` | afftrends.com/partner | RU editorial network reviews: rating /5, CPA span, verticals, GEO, minimum, founded | ~80 |
+| `cpa_club` | cpa.club/en/companies | ~240 network profiles with named managers (role, email, Telegram, Skype), tags, ratings, socials | ~240 |
+| `affroom` | affroom.com reviews | programme/network reviews: rating /5, vertical, brands, commission type, countries, minimum, payment frequency/methods | ~80 |
 | `tradetracker` | tradetracker.com/<cc>/campaigns | 25 markets × categories: brand, logo, blurb, network — **first 12 per category only** (load-more is client-side), no commissions | partial |
 
 Rejected after probing: getlasso.co / affiliateprogramdb.com (403 on every exit),
