@@ -29,7 +29,7 @@ module.exports = {
     const params = Object.fromEntries([...between(h, 'aria-label="Parameters Information"', "Supported countries").matchAll(/text-on-surface-variant">([^<]*)<\/span>\s*<span class="text-lg text-on-surface">([^<]*)</g)].map((m) => [text(m[1]), text(m[2])]));
     const sup = (h.match(/Supported countries \((\d+)\)/) || [])[1];
     const last = (h.match(/Last update:\s*([A-Z][a-z]+ \d{1,2}, \d{4})/) || [])[1];
-    const net = (h.match(/href="https:\/\/best-affiliate-programs\.net\/networks\/([a-z0-9-]+)\/\d+"[^>]*>\s*([^<]{2,60}?)\s*</) || []);
+    // the "networks" sidebar (Paysale, Cpagetti …) is a site-wide promo block, not the programme's network — never attributed
     const forbidden = (desc.match(/don't accept traffic from these countries:\s*(.*)$/i) || [])[1];
     const usd = (params["CPA/CPL"] || "").match(/([\d,]+(?:\.\d+)?)/), pct = (params["RevShare"] || "").match(/([\d.]+)\s*%/), cps = (params["CPS"] || params["CPS (Ratio)"] || "").match(/([\d.]+)\s*%/);
     const models = ["CPA/CPL", "RevShare", "CPS", "CPS (Ratio)", "CPC", "CPM"].filter((k) => params[k]);
@@ -37,7 +37,7 @@ module.exports = {
       program_name: name, domain: `bap.${url.split("/").pop()}`, signup_url: `${url.replace(/\/x\//, "/")}/join`, landing_url: null,
       logo_url: null, description: (desc || blurb).slice(0, 3000) || null,
       vertical: tags[0] || null, categories: tags.length ? tags : null, tags: tags.slice(0, 20),
-      network: net[2] ? text(net[2]) : null, commission: models.map((k) => `${k}: ${params[k]}`).join("; ") || null,
+      network: null, commission: models.map((k) => `${k}: ${params[k]}`).join("; ") || null,
       commission_type: models.map((k) => k.replace(" (Ratio)", "")).join(", ") || null, commission_types: models.length ? models.map((k) => k.replace(" (Ratio)", "")) : null,
       currency: params["Currency"] || null, flat_max: usd ? parseFloat(usd[1].replace(/,/g, "")) : null, flat_min: usd ? parseFloat(usd[1].replace(/,/g, "")) : null,
       pct_max: pct ? +pct[1] : cps ? +cps[1] : null, pct_min: pct ? +pct[1] : cps ? +cps[1] : null,
