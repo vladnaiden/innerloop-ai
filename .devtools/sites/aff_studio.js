@@ -23,7 +23,7 @@ module.exports = {
     const geos = [...between(h, "Target GEOs</p>", "</div>").matchAll(/>([^<>]{2,40})<\/span>/g)].map((m) => text(m[1])).filter(Boolean);
     const brands = [...between(h, "Brands in the program", "Reports (").matchAll(/View brand details/g)].length;
     const brandNames = [...between(h, "Brands</p>", "</div>").matchAll(/>([^<>]{2,60})<\/span>/g)].map((m) => text(m[1]));
-    const highlights = text(between(h, "Program Highlights", "Program Details").replace(/^[^>]*>/, "").replace(/<\/(p|li|h\d)>/g, " · ")).replace(/^Program Highlights\s*·?\s*/, "");
+    const highlights = text(between(h, "Program Highlights", "Program Details").replace(/^[^>]*>/, "").replace(/<\/(p|li|h\d)>/g, " · ")).replace(/^Program Highlights\s*·?\s*/, "").replace(/^[·\s]+/, "");
     const details = grid["Commission Details"] || "";
     const pct = details.match(/RevShare\s*(\d{1,3})(?:\s*-\s*(\d{1,3}))?\s*%/i), cpa = details.match(/CPA\s*(\d+)\s*(USD|EUR|\$|€)/i);
     const types = (grid["Commission Type"] || "").split(/\s*,\s*/).map((t) => t.replace(/\s*Available$/i, "")).filter(Boolean);
