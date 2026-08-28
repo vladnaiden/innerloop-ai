@@ -130,6 +130,7 @@ replays stored pages offline; `--max-age-days` re-fetches old ones.
 | `bap_list` | best-affiliate-programs.net (Livewire) | only the first page is reachable from outside (the component ignores `page` updates and `search()` returns 0 without the site's session) — kept for the seed ids | 17 |
 | `bap_detail` | best-affiliate-programs.net/programs/x/<id> | 45,413 programme pages walked as a graph (each page links ~10 related programmes; `next()` returns them all): tags, parameters (status, currency, CPA/CPL, RevShare, bonuses), supported/forbidden countries, last update | ~45,000 |
 | `indoleads` | indoleads.com/offers | Indoleads public offers: model, GEO, eCPC, hold, CR, cookie, creatives flags, traffic-restriction grid | ~460 |
+| `affcaptain` | affcaptain.com (programmes + networks) | details table (base commission, model, minimum, frequency/methods, referral %, tracking, cookie, GEOs, managers, traffic), editorial rating, pros/cons | ~770 |
 | `tradetracker` | tradetracker.com/<cc>/campaigns | 25 markets × categories: brand, logo, blurb, network — **first 12 per category only** (load-more is client-side), no commissions | partial |
 
 Rejected after probing: getlasso.co / affiliateprogramdb.com (403 on every exit),
