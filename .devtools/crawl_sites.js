@@ -95,7 +95,7 @@ async function upsert(db, row, slug, url, fetchedAt) {
     if (fromDisk && fs.existsSync(p)) { html = zlib.gunzipSync(fs.readFileSync(p)).toString(); fetchedAt = d?.fetched || null; }
     else {
       const t0 = Date.now();
-      try { const r = await af.get(t.url, { tries: 3, gapBase: 3000 }); html = r.html || r.text || ""; metric({ ev: "fetch", ok: true, ms: Date.now() - t0, offers: 1 }); }
+      try { const r = await af.get(t.url, { tries: 3, gapBase: 3000, maxChars: site.maxChars || 900000 }); html = r.html || r.text || ""; metric({ ev: "fetch", ok: true, ms: Date.now() - t0, offers: 1 }); }
       catch (e) { metric({ ev: "fetch", ok: false, ms: Date.now() - t0, reason: String(e.message).slice(0, 40) }); state.failed[t.slug] = { url: t.url, at: Date.now(), reason: String(e.message).slice(0, 80) }; counts.failed++; save(state); await af.pace(5000); continue; }
       fetchedAt = new Date().toISOString();
       fs.writeFileSync(p, zlib.gzipSync(html));

@@ -7,7 +7,7 @@ module.exports = {
     const out = new Map();
     for (let p = 1; p <= 150; p++) {
       let r; try { r = await af.get(`${this.base}/kampane/?page=${p}`, { tries: 2 }); } catch { break; }
-      const links = [...(r.html || "").matchAll(/href="https:\/\/affiliatekatalog\.com\/kampane\/([a-z0-9-]+-\d+)\/"/g)].map((m) => m[1]);
+      const links = [...(r.html || "").matchAll(/href="https:\/\/affiliatekatalog\.com\/kampane\/([a-z0-9][a-z0-9-]*)\/"/g)].map((m) => m[1]).filter((s) => s !== "nova");
       let fresh = 0; for (const s of links) if (!out.has(s)) { out.set(s, { url: `${this.base}/kampane/${s}/`, slug: s }); fresh++; }
       if (!links.length || (p > 1 && !fresh)) break;
       await af.pace(2000);

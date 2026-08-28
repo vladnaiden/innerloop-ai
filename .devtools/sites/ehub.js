@@ -4,13 +4,13 @@
 const { text, decode, between } = require("./_common");
 const MARKETS = { cz: "/katalog-kampani", sk: "/sk/campaign-catalog", en: "/en/campaign-catalog", de: "/de/katalog", pl: "/pl/katalog", hu: "/hu/katalogus", ro: "/ro/catalog" };
 module.exports = {
-  name: "ehub", lang: "cs", region: "CEE", base: "https://ehub.cz",
+  name: "ehub", lang: "cs", region: "CEE", base: "https://ehub.cz", maxChars: 4000000,
   async list() { return Object.entries(MARKETS).map(([cc, path]) => ({ url: `${this.base}${path}`, slug: cc })); },
   parse(html, url) {
     const h = String(html);
     const cc = url.split("/").filter(Boolean)[2] && /^[a-z]{2}$/.test(url.split("/").filter(Boolean)[2]) ? url.split("/").filter(Boolean)[2] : "cz";
     const seen = new Set();
-    return [...h.matchAll(/<tr>\s*<td>\s*<a href="\/([a-f0-9]{8})-([a-z0-9-]+)"[\s\S]*?<\/tr>/g)].map((m) => {
+    return [...h.matchAll(/<tr>\s*<td>\s*<a href="\/(?:[a-z]{2}\/)?([a-f0-9]{8})-([a-z0-9-]+)"[\s\S]*?<\/tr>/g)].map((m) => {
       const tr = m[0], id = m[1];
       if (seen.has(id)) return null; seen.add(id);
       const name = text((tr.match(/class="name"[^>]*>\s*([^<]*?)\s*<\/a>/) || [])[1] || "");
@@ -24,7 +24,7 @@ module.exports = {
       const models = [...comm.matchAll(/\b(PPS|PPL|PPC|CPA|CPL|CPS)\b/g)].map((x) => x[1]).filter((v, i, a) => a.indexOf(v) === i);
       return {
         key: id, program_name: name || null, domain: /\.[a-z]{2,}$/i.test(name) && !/\s/.test(name) ? name.toLowerCase().replace(/^www\./, "") : `ehub.${id}`,
-        signup_url: `${this.base}/${id}-${m[2]}`, landing_url: null, logo_url: logo, network: "eHUB", vertical: cat || null, categories: cat ? [cat] : null,
+        signup_url: `${this.base}/${cc === "cz" ? "" : cc + "/"}${id}-${m[2]}`, landing_url: null, logo_url: logo, network: "eHUB", vertical: cat || null, categories: cat ? [cat] : null,
         commission: comm || null, commission_type: models.join(", ") || null, commission_types: models.length ? models : null,
         pct_min: pcts.length ? Math.min(...pcts) : null, pct_max: pcts.length ? Math.max(...pcts) : null,
         cookie_days: attr ? parseInt(attr, 10) || null : null, cookie_length_raw: attr || null,
