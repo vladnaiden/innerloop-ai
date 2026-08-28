@@ -17,7 +17,7 @@ module.exports = {
   },
   parse(html, url) {
     const h = String(html);
-    const name = text(between(h, '<h1 class="offer__title__header">', "</h1>").replace(/^[^>]*>/, "")).replace(/^Партнерская программа\s+/, "");
+    const name = text((h.match(/<h1[^>]*>([\s\S]*?)<\/h1>/) || [])[1] || "").replace(/^Партнерская программа\s+/, "");
     const logoBlock = between(h, 'class="offer__description__logo"', "</div>");
     const landing = (logoBlock.match(/<a href="([^"]+)"/) || [])[1] || null;
     const logo = (logoBlock.match(/<img[^>]+src="([^"]+)"/) || [])[1] || null;
