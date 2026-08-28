@@ -2,13 +2,15 @@
 // affiliate-programme directory (catalogued since 2001, ~400 entries in 40 categories): one record
 // per listed programme — name, summary, PPS / PPL / PPC terms as published (often per network),
 // managing networks ("GESTITO DA"), tags, detail-sheet link. Category pages paginate (/page/N/).
-const { text, decode, between } = require("./_common");
+const { text, decode: dec0, between } = require("./_common");
+const IT = { "&egrave;": "è", "&eacute;": "é", "&agrave;": "à", "&ograve;": "ò", "&ugrave;": "ù", "&igrave;": "ì", "&rsquo;": "’", "&lsquo;": "‘", "&hellip;": "…", "&euro;": "€", "&nbsp;": " ", "&amp;": "&", "&quot;": '"', "&#8217;": "’" };
+const decode = (s) => dec0(String(s).replace(/&[a-z]+;|&#\d+;/g, (m) => IT[m] ?? m));
 module.exports = {
   name: "alverde", lang: "it", region: "IT", base: "https://www.alverde.net",
   async list(af) {
     const r = await af.get(`${this.base}/blog/directory-programmi-di-affiliazione/`, { tries: 2 });
     const cats = [...new Set([...(r.html || r.text || "").matchAll(/href="https:\/\/www\.alverde\.net\/blog\/directory-programmi-di-affiliazione\/([a-z0-9-]+)\/"/g)].map((m) => m[1]))];
-    return cats.map((c) => ({ url: `${this.base}/blog/directory-programmi-di-affiliazione/${c}/`, slug: c }));
+    return cats.filter((c) => !/^(feed|page)$/.test(c)).map((c) => ({ url: `${this.base}/blog/directory-programmi-di-affiliazione/${c}/`, slug: c }));
   },
   next(html, url) {
     const m = String(html).match(new RegExp(`href="(${url.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&")}page\\/(\\d+)\\/)"`, "g"));
