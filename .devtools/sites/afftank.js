@@ -35,7 +35,7 @@ module.exports = {
     const offers = parseInt((kv["Number of Offers"] || "").replace(/\D/g, ""), 10) || null;
     return {
       program_name: name, domain: join ? host(join) : `afftank.${url.split("/").pop()}`, signup_url: join, landing_url: join ? `https://${host(join)}` : null, logo_url: ld.image || null,
-      description: tagline || null, // the LD description is AffTank's own boilerplate vertical: kind || null, categories: cats.length ? cats : null,
+      description: tagline || null, vertical: kind || null, categories: cats.length ? cats : null, // the LD description is AffTank's own boilerplate
       commission: rate || null, pct_min: pct ? +pct[1] : null, pct_max: pct ? +pct[1] : null,
       commission_type: types.join(", ") || null, commission_types: types.length ? types : null,
       referral_commission: kv["Referral Commission"] || null, tracking_software: kv["Tracking Software"] || null,
