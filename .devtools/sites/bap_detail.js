@@ -10,7 +10,7 @@ module.exports = {
   name: "bap_detail", lang: "en", region: "global", base: BASE, authoritative: true, // detail pages replace listing stubs
   async list(af, db) {
     const ids = new Set(SEEDS);
-    try { for (const r of (await db.query(`SELECT extra->>'bap_id' AS id FROM mr_program WHERE site_adapter = 'bap_list' AND extra ? 'bap_id'`)).rows) if (r.id) ids.add(r.id); } catch {}
+    try { for (const r of (await db.query(`SELECT extra->>'bap_id' AS id FROM mr_program WHERE site_adapter IN ('bap_list','bap_detail') AND extra ? 'bap_id'`)).rows) if (r.id) ids.add(r.id); } catch {}
     return [...ids].map((id) => ({ url: `${BASE}/programs/x/${id}`, slug: id }));
   },
   next(html, url) {
