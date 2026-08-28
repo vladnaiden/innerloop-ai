@@ -16,7 +16,9 @@ module.exports = {
     const tagline = text((head.match(/<\/h1>\s*<p>([\s\S]*?)<\/p>/) || [])[1] || "");
     const rating = (head.match(/r-average">([\d.]+)</) || [])[1], votes = (head.match(/\((\d+) votes\)/) || [])[1];
     const logo = (head.match(/<img src="([^"]+)"/) || [])[1] || null;
-    const body = text(between(h, 'class="network-single', 'class="main__r').replace(/<\/(p|li|h\d)>/g, " · ")).replace(/^[^·]*Overview\s*·?\s*/, "");
+    // the profile tabs (Profile · Connect · Reviews · …) precede the copy — start at the first real sentence
+    const segs = text(between(h, 'class="network-single', 'class="main__r').replace(/^[^>]*>/, "").replace(/<\/(p|li|h\d)>/g, " · ")).split(" · ").map((x) => x.trim());
+    const start = segs.findIndex((x) => x.length > 60); const body = (start >= 0 ? segs.slice(start) : segs).join(" · ");
     const models = [...new Set([...body.matchAll(/\b(RevShare|Revenue Share|CPA|CPL|CPS|CPI|Hybrid)\b/gi)].map((m) => m[1].replace(/Revenue Share/i, "RevShare")))].slice(0, 6);
     return {
       program_name: name, domain: signup ? new URL(signup).hostname.replace(/^www\./, "") : `boa.${url.replace(/\/$/, "").split("/").pop()}`, signup_url: signup, landing_url: null, logo_url: logo,
