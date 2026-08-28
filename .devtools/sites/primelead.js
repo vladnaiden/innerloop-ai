@@ -6,12 +6,14 @@ module.exports = {
   name: "primelead", lang: "ru", region: "UA", base: "https://primelead.com.ua",
   async list(af) {
     const out = new Map();
-    for (let p = 1; p <= 40; p++) {
+    let last = 1;
+    for (let p = 1; p <= Math.min(last, 60); p++) {
       const r = await af.get(`${this.base}/master/offers?page=${p}`, { tries: 2 });
       const h = r.html || r.text || "";
       const ids = [...h.matchAll(/href="\/offer\/(\d+)"/g)].map((m) => m[1]);
       for (const id of ids) out.set(id, { url: `${this.base}/offer/${id}`, slug: id });
-      if (!ids.length || !h.includes(`/master/offers?page=${p + 1}`)) break;
+      for (const m of h.matchAll(/\/master\/offers\?page=(\d+)/g)) last = Math.max(last, +m[1]);
+      if (!ids.length) break;
       await af.pace(1500);
     }
     return [...out.values()];
