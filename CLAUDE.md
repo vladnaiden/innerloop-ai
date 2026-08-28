@@ -119,6 +119,7 @@ replays stored pages offline; `--max-age-days` re-fetches old ones.
 | `afftrends` | afftrends.com/partner | RU editorial network reviews: rating /5, CPA span, verticals, GEO, minimum, founded | ~80 |
 | `cpa_club` | cpa.club/en/companies | ~240 network profiles with named managers (role, email, Telegram, Skype), tags, ratings, socials | ~240 |
 | `affroom` | affroom.com reviews | programme/network reviews: rating /5, vertical, brands, commission type, countries, minimum, payment frequency/methods | ~80 |
+| `affcatalog` | affcatalog.com/en/aff-program | iGaming programmes: terms table (min payout, frequency, negative balance, admin fee, software, licence, cookie, conversion window, CPA/RevShare/Sub-aff, founded), payment methods, brands, target/forbidden GEOs | ~1,460 |
 | `tradetracker` | tradetracker.com/<cc>/campaigns | 25 markets × categories: brand, logo, blurb, network — **first 12 per category only** (load-more is client-side), no commissions | partial |
 
 Rejected after probing: getlasso.co / affiliateprogramdb.com (403 on every exit),
