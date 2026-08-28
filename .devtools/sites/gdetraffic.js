@@ -32,7 +32,7 @@ module.exports = {
     const types = (kv["Типы офферов"] || "").split(/\s*,\s*/).filter(Boolean);
     return {
       program_name: name.replace(/\s+партнерская сеть.*$/i, "").replace(/\s+—.*$/, ""), domain: `gdetraffic.${url.split("/").pop().toLowerCase()}`, signup_url: url,
-      description: (desc || short).slice(0, 4000) || null,
+      description: (desc || short).replace(/^(\s*·\s*)+/, "").slice(0, 4000) || null,
       payment_methods: kv["Платежные системы"] ? kv["Платежные системы"].split(/\s*,\s*/) : null, payment_frequency: kv["Выплата"] || null,
       hold_days: hold ? +(hold[2] || hold[1]) : null,
       tags: [...new Set([...types.map((t) => t.toLowerCase()), ...tags.map((t) => t.toLowerCase())])].slice(0, 20),
