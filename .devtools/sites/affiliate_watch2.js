@@ -30,8 +30,8 @@ module.exports = {
       categories: (a.categories || []).map((c) => c.name).filter(Boolean), vertical: ((a.categories || [])[0] || {}).name || null,
       tags: (a.tags || []).map((t) => t.name).filter(Boolean).slice(0, 20), socials: socials.length ? socials : null,
       telegram: a.social_telegram || null, rating_avg: a.rating_ai ? parseFloat(a.rating_ai) : null,
-      source_updated: (a.updated_at || "").slice(0, 10) || null, tracking_link: a.go || null,
-      extra: { rating_scale: 100, rating_kind: "AI rating", two_tier: !!a.is_two_tier, status: a.status, youtube_review: a.youtube_review_id || undefined, aw_id: a.id },
+      source_updated: (a.updated_at || "").slice(0, 10) || null,
+      extra: { tracking_link: a.go || undefined, rating_scale: 100, rating_kind: "AI rating", two_tier: !!a.is_two_tier, status: a.status, youtube_review: a.youtube_review_id || undefined, aw_id: a.id },
     };
   },
 };
