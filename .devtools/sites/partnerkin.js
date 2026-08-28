@@ -5,8 +5,12 @@ const { text, between, decode, host } = require("./_common");
 module.exports = {
   name: "partnerkin", lang: "ru", region: "CIS", base: "https://partnerkin.com",
   async list(af) {
-    const root = await af.get(`${this.base}/c/7`, { tries: 2 });
-    const cats = [...(root.html || "").matchAll(/href="\/c\/(\d+)"/g)].map((m) => m[1]).filter((v, i, a) => a.indexOf(v) === i);
+    // two roots: the network rating (/c/7) and the programme catalogue (/site/partners) — together they list every /c/<id> category
+    const cats = [];
+    for (const root of ["/c/7", "/site/partners"]) {
+      try { const r = await af.get(`${this.base}${root}`, { tries: 2 }); for (const m of (r.html || "").matchAll(/href="\/c\/(\d+)"/g)) if (!cats.includes(m[1])) cats.push(m[1]); } catch {}
+      await af.pace(2000);
+    }
     const out = new Map();
     for (const cat of cats) {
       for (let p = 1; p <= 40; p++) {
