@@ -134,13 +134,15 @@ replays stored pages offline; `--max-age-days` re-fetches old ones.
 | `tradetracker` | tradetracker.com/<cc>/campaigns | 25 markets × categories: brand, logo, blurb, network — **first 12 per category only** (load-more is client-side), no commissions | partial |
 | `linkclicky` | linkclicky.com/affiliate-program | ~1,750 US/CA programmes: website, niches, platform (network), regions, commission, official join link (template "how to join" text not stored) | ~1,750 |
 | `statsdrone` | statsdrone.com/affiliate-programs | 3,637 iGaming programmes: labelled review sections (commission, carryover, CPA, sub-affiliates), tracking software + exposed stats, brands with sites, contact card, join link | 3,637 |
+| `communicationads` | communicationads.net/de-de/publisher/partnerprogramme | communicationAds (DACH telecom/energy network): commission per lead/sale in EUR, model, cookie days, territory, advertiser site, programme text | ~85 |
+| `partner_ads` | partner-ads.com/dk (20 category lists → showprogram2.php?id) | Partner-ads, Denmark's largest network: sale commission % / per-lead amount, description, advertiser website (ISO-8859-1 source) | ~1,230 |
 
 Rejected after probing: getlasso.co / affiliateprogramdb.com (403 on every exit),
 gdetraffic.com (article feed, not a catalogue), theaffiliateslist (paywalled),
 Chinese CPS networks (duomai / yiqifa / linktech are login-only JS shells — no public
 advertiser list exists to parse), adtraction (brand cards load via /ajax/, no HTML),
 daisycon (JS-rendered list), admitad (no public catalogue any more), mylead (404),
-webepartners (≈15 programmes), affiliatecorner.co (Vite SPA — 3 KB shell, bundle exposes no listing API), all-affiliates.com (country pages only), flexoffers directory (429), financeAds (public showcase is 8 programmes; the 500+ are behind login), letmeads (3), affylist (JS, 5 MB pages), wowtrk (Cloudflare challenge), annonsering.se (login since 2019), dognet (single >5 MB page — over the anonfetch cap), affbun (Cloudflare challenge on every exit), casinoaffiliateprograms.com (522), GPWA (403), AffiliateGuardDog (forum).
+webepartners (≈15 programmes), affiliatecorner.co (Vite SPA — 3 KB shell, bundle exposes no listing API), all-affiliates.com (country pages only), flexoffers directory (429), adcell.com (programme URLs bounce to the homepage — login-only), superclix.de (dead domain), awin / avantlink / digistore24 / adrecord (no public programme list), financeAds (public showcase is 8 programmes; the 500+ are behind login), letmeads (3), affylist (JS, 5 MB pages), wowtrk (Cloudflare challenge), annonsering.se (login since 2019), dognet (single >5 MB page — over the anonfetch cap), affbun (Cloudflare challenge on every exit), casinoaffiliateprograms.com (522), GPWA (403), AffiliateGuardDog (forum).
 
 ## Parsing — drift watch (mandatory before and during any scrape)
 
