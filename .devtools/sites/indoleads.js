@@ -22,7 +22,7 @@ module.exports = {
     const name = m ? m[1].trim() : h1.replace(/^New offer launched:\s*/, "").replace(/\s*Affiliate Program$/, "");
     if (!name) throw new Error("no name");
     const model = m ? m[2].toUpperCase() : null;
-    const geo = text((h.match(/GEO:\s*<[^>]*>\s*([^<]+)</) || h.match(/GEO:\s*([^<]{2,80})</) || [])[1] || "");
+    const geo = text((h.match(/GEO:\s*<\/span>\s*<span[^>]*>\s*([^<]+?)\s*<\/span>/) || [])[1] || "");
     const pairs = [...h.matchAll(/<span class="inline-block text-m-sm sm:text-base">([^<]*)<\/span>\s*<span class="inline-block text-m-sm text-[^"]*sm:text-base">\s*([^<]*?)\s*<\/span>/g)].map((x) => [text(x[1]), text(x[2])]);
     const restrictions = {}, stats = {};
     for (const [k, v] of pairs) { if (/^(Allow|Forbidden|Need approval)$/i.test(v)) restrictions[k] = v; else stats[k] = v; }
