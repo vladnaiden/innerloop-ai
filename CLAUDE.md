@@ -115,6 +115,8 @@ replays stored pages offline; `--max-age-days` re-fetches old ones.
 | `affbank` | affbank.com/offers/<network> | offer aggregator, ~37k rows from per-network listings (id, name, network, GEO, category, payout); the runner follows `next()` pagination | ~37,000 |
 | `admitad_store` | admitad.ru/store/offers | Admitad public showcase: EPC, CR, approval %, processing time, regions, tools, categories (rates are login-only, not claimed) | ~680 |
 | `affnext` | affnext.com | programmes + networks: LD-JSON profile, specialties (no figures — prose only) | ~1,150 |
+| `businessofapps` | businessofapps.com/affiliate | affiliate-network profiles: tagline, rating /10 + votes, sign-up link, models mentioned | ~125 |
+| `afftrends` | afftrends.com/partner | RU editorial network reviews: rating /5, CPA span, verticals, GEO, minimum, founded | ~80 |
 | `tradetracker` | tradetracker.com/<cc>/campaigns | 25 markets × categories: brand, logo, blurb, network — **first 12 per category only** (load-more is client-side), no commissions | partial |
 
 Rejected after probing: getlasso.co / affiliateprogramdb.com (403 on every exit),
@@ -122,7 +124,7 @@ gdetraffic.com (article feed, not a catalogue), theaffiliateslist (paywalled),
 Chinese CPS networks (duomai / yiqifa / linktech are login-only JS shells — no public
 advertiser list exists to parse), adtraction (brand cards load via /ajax/, no HTML),
 daisycon (JS-rendered list), admitad (no public catalogue any more), mylead (404),
-webepartners (≈15 programmes).
+webepartners (≈15 programmes), financeAds (public showcase is 8 programmes; the 500+ are behind login), letmeads (3), affylist (JS, 5 MB pages), wowtrk (Cloudflare challenge), annonsering.se (login since 2019), dognet (single >5 MB page — over the anonfetch cap).
 
 ## Parsing — drift watch (mandatory before and during any scrape)
 
