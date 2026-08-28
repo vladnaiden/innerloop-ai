@@ -105,7 +105,7 @@ async function upsert(db, row, slug, url, fetchedAt) {
       catch (e) {
         metric({ ev: "fetch", ok: false, ms: Date.now() - t0, reason: String(e.message).slice(0, 40) });
         // a page the site itself says is gone (404/410) is finished, not failed — it must not be retried every cycle
-        if (/HTTP (404|410)\b/.test(String(e.message))) { state.done[t.slug] = { url: t.url, at: Date.now(), pv: PV, gone: true }; delete state.failed[t.slug]; }
+        if (e.gone || /HTTP (404|410)\b/.test(String(e.message))) { state.done[t.slug] = { url: t.url, at: Date.now(), pv: PV, gone: true }; delete state.failed[t.slug]; }
         else state.failed[t.slug] = { url: t.url, at: Date.now(), reason: String(e.message).slice(0, 80) };
         counts.failed++; save(state); await af.pace(5000); continue; }
       fetchedAt = new Date().toISOString();
