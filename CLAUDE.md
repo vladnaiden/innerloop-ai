@@ -132,13 +132,15 @@ replays stored pages offline; `--max-age-days` re-fetches old ones.
 | `indoleads` | indoleads.com/offers | Indoleads public offers: model, GEO, eCPC, hold, CR, cookie, creatives flags, traffic-restriction grid | ~460 |
 | `affcaptain` | affcaptain.com (programmes + networks) | details table (base commission, model, minimum, frequency/methods, referral %, tracking, cookie, GEOs, managers, traffic), editorial rating, pros/cons | ~770 |
 | `tradetracker` | tradetracker.com/<cc>/campaigns | 25 markets × categories: brand, logo, blurb, network — **first 12 per category only** (load-more is client-side), no commissions | partial |
+| `linkclicky` | linkclicky.com/affiliate-program | ~1,750 US/CA programmes: website, niches, platform (network), regions, commission, official join link (template "how to join" text not stored) | ~1,750 |
+| `statsdrone` | statsdrone.com/affiliate-programs | 3,637 iGaming programmes: labelled review sections (commission, carryover, CPA, sub-affiliates), tracking software + exposed stats, brands with sites, contact card, join link | 3,637 |
 
 Rejected after probing: getlasso.co / affiliateprogramdb.com (403 on every exit),
 gdetraffic.com (article feed, not a catalogue), theaffiliateslist (paywalled),
 Chinese CPS networks (duomai / yiqifa / linktech are login-only JS shells — no public
 advertiser list exists to parse), adtraction (brand cards load via /ajax/, no HTML),
 daisycon (JS-rendered list), admitad (no public catalogue any more), mylead (404),
-webepartners (≈15 programmes), financeAds (public showcase is 8 programmes; the 500+ are behind login), letmeads (3), affylist (JS, 5 MB pages), wowtrk (Cloudflare challenge), annonsering.se (login since 2019), dognet (single >5 MB page — over the anonfetch cap), affbun (Cloudflare challenge on every exit), casinoaffiliateprograms.com (522), GPWA (403), AffiliateGuardDog (forum).
+webepartners (≈15 programmes), affiliatecorner.co (Vite SPA — 3 KB shell, bundle exposes no listing API), all-affiliates.com (country pages only), flexoffers directory (429), financeAds (public showcase is 8 programmes; the 500+ are behind login), letmeads (3), affylist (JS, 5 MB pages), wowtrk (Cloudflare challenge), annonsering.se (login since 2019), dognet (single >5 MB page — over the anonfetch cap), affbun (Cloudflare challenge on every exit), casinoaffiliateprograms.com (522), GPWA (403), AffiliateGuardDog (forum).
 
 ## Parsing — drift watch (mandatory before and during any scrape)
 
@@ -175,6 +177,12 @@ bash .devtools/watch_sources.sh
   generic "All stored fields / completeness %" block — so new columns get explicit `kv()`
   rows in `app/[lang]/affiliate-program/[slug]/page.tsx`, never a dumped list. Before
   aliasing a build to the domain, run the site's Playwright gate (`npm run test:e2e`).
+- **Plans layer (28.08.2026).** Limits are data in `.devtools/affiliate-site/lib/plans.ts`
+  (visitor / free / pro / business); every gate reads them, never hard-codes a number. Payout
+  terms and contacts are fetched client-side (`/api/contacts`) so the cached program HTML never
+  carries them; exports go through `/api/export` with a per-account watermark; payments are a
+  merchant of record (Lemon Squeezy, `lib/billing.ts`) — see `DEPLOY.md` "Plans, exports and
+  payments". Signed-in checks: `node ops/probe_plans.mjs`.
 - Novelty >=20% means stop and look. It found `Affiliate Managers` on a live page
   that existed in no other sample.
 - A rebuild that only changes class hashes must score ~0%: build-generated classes
