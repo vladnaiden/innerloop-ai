@@ -9,7 +9,8 @@ module.exports = {
     const nets = new Set();
     for (let p = 1; p <= 60; p++) {
       let r; try { r = await af.get(`${this.base}/cpa-networks?page=${p}`, { tries: 2 }); } catch { break; }
-      const found = [...(r.html || "").matchAll(/href="\/cpa-networks\/([a-z0-9-]+)"/g)].map((m) => m[1]);
+      // a card says "Offers:<span>N" — networks with 0 offers have no /offers/<slug> page (404), skip them
+      const found = [...(r.html || "").matchAll(/href="\/cpa-networks\/([a-z0-9-]+)"[^>]*>[^<]*<\/a>[\s\S]{0,400}?Offers:<span[^>]*>(\d+)</g)].filter((m) => +m[2] > 0).map((m) => m[1]);
       const before = nets.size; for (const n of found) nets.add(n);
       if (!found.length || nets.size === before) break;
       await af.pace(2000);
