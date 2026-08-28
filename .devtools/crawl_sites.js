@@ -77,7 +77,7 @@ async function upsert(db, row, slug, url, fetchedAt) {
     // a page that never parsed has no `done` entry — its URL lives in `failed`
     targets = fs.readdirSync(RAW).filter((f) => f.endsWith(".html.gz")).map((f) => { const s = f.replace(/\.html\.gz$/, ""); return { slug: s, url: state.done[s]?.url || state.failed[s]?.url || (site.urlFor ? site.urlFor(s) : null) }; }).filter((t) => t.url);
   } else {
-    targets = await site.list(af);
+    targets = await site.list(af, db);
     console.log(`${SITE}: ${targets.length} programme URLs listed`);
   }
   if (ONLY) targets = targets.filter((t) => t.slug === ONLY);
@@ -96,7 +96,8 @@ async function upsert(db, row, slug, url, fetchedAt) {
     if (fromDisk && fs.existsSync(p)) { html = zlib.gunzipSync(fs.readFileSync(p)).toString(); fetchedAt = d?.fetched || null; }
     else {
       const t0 = Date.now();
-      try { const r = await af.get(t.url, { tries: 3, gapBase: 3000, maxChars: site.maxChars || 900000 }); html = r.html || r.text || ""; metric({ ev: "fetch", ok: true, ms: Date.now() - t0, offers: 1 }); }
+      // a module may own its transport (e.g. a Livewire POST) — it returns the page's HTML
+      try { html = typeof site.fetch === "function" ? await site.fetch(af, t) : ((r) => r.html || r.text || "")(await af.get(t.url, { tries: 3, gapBase: 3000, maxChars: site.maxChars || 900000 })); metric({ ev: "fetch", ok: true, ms: Date.now() - t0, offers: 1 }); }
       catch (e) { metric({ ev: "fetch", ok: false, ms: Date.now() - t0, reason: String(e.message).slice(0, 40) }); state.failed[t.slug] = { url: t.url, at: Date.now(), reason: String(e.message).slice(0, 80) }; counts.failed++; save(state); await af.pace(5000); continue; }
       fetchedAt = new Date().toISOString();
       fs.writeFileSync(p, zlib.gzipSync(html));

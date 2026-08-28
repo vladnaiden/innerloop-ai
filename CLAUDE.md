@@ -81,7 +81,7 @@ Skills were derived from a sweep of 60+ sessions (25.08.2026, `session-sweep`); 
 One runner, one module per site in `.devtools/sites/<name>.js` (`{name, lang, region,
 list(af), parse(html, url)}`; `parse` may return an array for table pages). The runner
 owns pacing, raw HTML (`raw_pages/<site>/<slug>.html.gz`), resumable state + per-site
-lock (`.sites-state/`), listing pagination via an optional `next(html, url)` on the module, provenance (`extra.provenance`, `source_url`, `parser_version`
+lock (`.sites-state/`), listing pagination via an optional `next(html, url)` on the module, a custom transport via optional `fetch(af, item)` (Livewire/POST sources), provenance (`extra.provenance`, `source_url`, `parser_version`
 = hash of the module, `parsed_at`) and the upsert (slug `<site>-<slug>`; a brand that
 already exists from another source is *filled*, never duplicated — `extra.also_on`).
 `sites_cycle.sh` runs a bounded pass per site inside the supervisor; `--reparse`
@@ -127,6 +127,7 @@ replays stored pages offline; `--max-age-days` re-fetches old ones.
 | `uppromote` | uppromote.com/affiliate-directory | ~780 programmes: commission, cookie, regions, website, niche, platform, join link, editorial feature tables | ~780 |
 | `partnerstack_market` | market.partnerstack.com/page | PartnerStack public marketplace: offer structure, commission length, cookie, payout method/timing, attribution, features | ~400 |
 | `affiliateroll` | affiliateroll.com/programs | curated directory: commission, type, cookie, minimum payout, payment methods, launch year, benefits | ~165 |
+| `bap_list` | best-affiliate-programs.net (Livewire) | 45,413 programmes, 20 per component POST: name, blurb, models, indicator values, detail URL — the runner's `site.fetch()` hook owns the Livewire session | ~45,000 |
 | `tradetracker` | tradetracker.com/<cc>/campaigns | 25 markets × categories: brand, logo, blurb, network — **first 12 per category only** (load-more is client-side), no commissions | partial |
 
 Rejected after probing: getlasso.co / affiliateprogramdb.com (403 on every exit),
