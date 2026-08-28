@@ -1,7 +1,7 @@
 // indoleads.com/offers/en/offer/<id> — Indoleads' public offer directory (~460): name with
 // model (CPS/CPA/CPL), GEO, eCPC, hold, CR, cookie lifetime, creatives flags, a full
 // traffic-restriction grid (Allow / Forbidden / Need approval), description.
-const { text, between, decode } = require("./_common");
+const { text, between, decode, meta } = require("./_common");
 module.exports = {
   name: "indoleads", lang: "en", region: "global", base: "https://indoleads.com",
   async list(af) {
@@ -26,7 +26,7 @@ module.exports = {
     const pairs = [...h.matchAll(/<span class="inline-block text-m-sm sm:text-base">([^<]*)<\/span>\s*<span class="inline-block text-m-sm text-[^"]*sm:text-base">\s*([^<]*?)\s*<\/span>/g)].map((x) => [text(x[1]), text(x[2])]);
     const restrictions = {}, stats = {};
     for (const [k, v] of pairs) { if (/^(Allow|Forbidden|Need approval)$/i.test(v)) restrictions[k] = v; else stats[k] = v; }
-    const desc = text(between(h, "Description</h2>", "</div>").replace(/^[^>]*>/, ""));
+    const desc = text(between(h, "Description</h2>", "</div>").replace(/^[^>]*>/, "")) || meta(h, "og:description") || "";
     const cookie = (stats["Cookie lifetime"] || "").match(/(\d+)/), hold = (stats["Hold period"] || "").match(/(\d+)/);
     const app = (h.match(/href="(https:\/\/app\.indoleads\.com\/[^"]+)"/) || [])[1] || null;
     return {
