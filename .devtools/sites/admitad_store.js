@@ -25,7 +25,7 @@ module.exports = {
     const side = (kind) => { const i = h.indexOf(`offer__sidebar--item-${kind}"`); if (i < 0) return ""; const j = h.indexOf('offer__sidebar--item ', i + 40); return h.slice(i, j > 0 ? j : i + 6000); };
     const regions = [...side("regions").matchAll(/<a[^>]*>([^<]*)<\/a>/g)].map((m) => text(m[1])).filter((v) => v && !/Показать/.test(v));
     const tools = [...side("tools").matchAll(/<a[^>]*>([^<]*)<\/a>/g)].map((m) => text(m[1])).filter(Boolean);
-    const cats = [...side("categories").matchAll(/<a[^>]*>(?:<strong>)?([^<]*?):?(?:<\/strong>)?<\/a>/g)].map((m) => text(m[1])).filter((v, i, a) => v && a.indexOf(v) === i);
+    const cats = [...side("categories").matchAll(/<a[^>]*>(?:<strong>)?([^<]*?):?(?:<\/strong>)?<\/a>/g)].map((m) => text(m[1])).filter((v, i, a) => v && a.indexOf(v) === i && !/^(Начать сотрудничество|Подключиться|Показать все)$/.test(v));
     const desc = text(between(h, 'class="offer__content__details"', "</div>").replace(/^[^>]*>/, "").replace(/<\/(p|li|h\d)>|<br\s*\/?>/g, " · "));
     const proc = (items["Средн. обработка"] || "").match(/(\d+)/);
     return {
