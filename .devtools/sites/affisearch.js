@@ -32,7 +32,7 @@ module.exports = {
       if (title || reward) rows.push({ title, reward, asp, blurb });
     }
     const table = between(h, "ASP別の取り扱い状況", "</table>") || "";
-    const asps = [...table.matchAll(/<tr>[\s\S]*?<\/tr>/g)].slice(0).map((t) => text(decode(t[0]).replace(/<[^>]+>/g, " | "))).filter((s) => s && !/^ASP \|/.test(s));
+    const asps = [...table.matchAll(/<tr>[\s\S]*?<\/tr>/g)].slice(0).map((t) => text(decode(t[0]).replace(/<[^>]+>/g, " | ")).replace(/(\s*\|\s*)+/g, " | ").replace(/^\s*\|\s*|\s*\|\s*$/g, "")).filter((s) => s && !/^ASP \|/.test(s));
     const yen = rows.map((r) => (r.reward.match(/([\d,]+)\s*円/) || [])[1]).filter(Boolean).map((s) => parseInt(s.replace(/,/g, ""), 10));
     const pct = rows.map((r) => (r.reward.match(/([\d.]+)\s*%/) || [])[1]).filter(Boolean).map(Number);
     const desc = rows[0]?.blurb || "";
