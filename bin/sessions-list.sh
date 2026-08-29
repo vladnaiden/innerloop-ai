@@ -55,6 +55,8 @@ for project in sorted(os.listdir(base)):
     pdir = os.path.join(base, project)
     if not os.path.isdir(pdir):
         continue
+    if "-scratchpad" in project or project.startswith("-tmp-"):
+        continue  # headless subagent runs, not conversations
     name = project
     home_prefix = os.path.expanduser("~").replace("/", "-")
     for prefix in ("-workspaces-", home_prefix + "-"):

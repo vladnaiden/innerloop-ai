@@ -110,7 +110,9 @@ const JSONISH = new Set(["rating_dist", "managers", "numbers", "extra", "jsonld"
     .reduce((m, r) => (m[r.column_name] = r.data_type === "ARRAY" ? `${r.udt_name.replace(/^_/, "")}[]`
       : r.data_type === "USER-DEFINED" ? r.udt_name : r.data_type, m), {});
   const cast = (f) => `${JSONISH.has(f) ? "jsonb" : (TYPES[f] || "text")}`;
-  const set = FIELDS.map((f) => `${f} = COALESCE(v.${f}, mr_program.${f})`).join(", ");
+  // URL columns must follow local exactly: a NULL means "dropped a third-party affiliate link" and has to win.
+  const OVERWRITE = new Set(["signup_url", "landing_url"]);
+  const set = FIELDS.map((f) => OVERWRITE.has(f) ? `${f} = v.${f}` : `${f} = COALESCE(v.${f}, mr_program.${f})`).join(", ");
   const CHUNK = 250;
   let n = 0;
   for (let i = 0; i < rows.length; i += CHUNK) {
