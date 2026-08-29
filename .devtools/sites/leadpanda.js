@@ -25,7 +25,8 @@ module.exports = {
     const sc = h.match(/<div class="score">([\d.]+)\s*\((\d+)\)/);
     const content = between(h, '<div class="post-content-styles">', "</article>") || between(h, '<div class="post-content-styles">', 'class="comments') || "";
     const site = (content.match(/href="(https?:\/\/(?!leadpanda\.media)[^"]+)"/) || [])[1] || null;
-    const cats = [...new Set([...h.matchAll(/leadpanda\.media\/partner-cat\/([a-z0-9-]+)\//g)].map((m) => m[1]).filter((c) => c !== "all"))];
+    const crumbs = between(h, 'itemtype="https://schema.org/BreadcrumbList"', "</ol>") || "";
+    const cats = [...new Set([...crumbs.matchAll(/partner-cat\/([a-z0-9-]+)\//g)].map((m) => m[1]).filter((c) => c !== "all"))];
     const desc = text(decode(content.replace(/<\/(p|li|h\d)>|<br\s*\/?>/g, " · ").replace(/<[^>]+>/g, " "))).replace(/(\s*·\s*){2,}/g, " · ").replace(/^(\s*·\s*)+|(\s*·\s*)+$/g, "");
     const models = [...new Set((desc.match(/\b(CPA|CPL|CPS|CPI|RevShare|Rev ?Share|Hybrid|SOI|DOI|PPS|CPM)\b/g) || []).map((m) => m.replace(/\s/g, "")))];
     const s = site ? site.replace(/\?utm_source=leadpandamediareview.*$/, "") : null;
