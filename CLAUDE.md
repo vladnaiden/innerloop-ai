@@ -172,6 +172,7 @@ replays stored pages offline; `--max-age-days` re-fetches old ones.
 | `topranked` | topranked.io/all-listings (listing-sitemapN.xml) | TopRanked.io directory: headline commission teaser, category, review count, affiliate-registration link, overview + review sections | ~310 |
 | `findaffiliates` | findaffiliates.online/<slug>-affiliate-program (sitemap) | FindAffiliates directory: category, commission, cookie days, advertiser site, description, last-verified date (apply links login-gated) | ~5,070 |
 | `zorbasmedia` | zorbasmedia.ru/programs (WP REST `programs`) | ZorbasMedia (RU) network reviews: founded, verticals, models, GEO, payment systems, min payout, forbidden traffic, offers count, site, Telegram, managers | ~300 |
+| `crypto_brands` | seed list of ~80 exchange / wallet / broker domains → their own affiliate pages | Brand-published crypto terms via `rate_terms` (commission wording next to the number); domains without an affiliate page or without published terms are recorded as gone | ~80 |
 
 Rejected after probing: getlasso.co / affiliateprogramdb.com (403 on every exit),
 gdetraffic.com root (article feed — the `/Partnerki` catalogue is now a module), theaffiliateslist (paywalled),
@@ -257,6 +258,7 @@ bash .devtools/watch_sources.sh
   an own-host list for provenance links, per-host keep-lists like CJ's `cid`) runs inside
   `crawl_sites.js` on every upsert; `clean_urls.js [--dry]` re-runs it over the table and logs every
   change to `backups/url_clean_<ts>.jsonl`. A dropped signup URL falls back to the cleaned landing page.
+- `brand_affiliate.js --vertical crypto` restricts the brand-page pass to one vertical (rows tagged or classified crypto).
 - Novelty >=20% means stop and look. It found `Affiliate Managers` on a live page
   that existed in no other sample.
 - A rebuild that only changes class hashes must score ~0%: build-generated classes
