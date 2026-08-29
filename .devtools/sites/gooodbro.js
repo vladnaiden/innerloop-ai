@@ -9,7 +9,8 @@ module.exports = {
   async list(af) {
     const out = new Map(); const grab = (h) => { for (const m of String(h).matchAll(/affiliate_program\/([A-Za-z0-9_-]+)/g)) if (m[1] !== "amp" && !out.has(m[1])) out.set(m[1], { url: `${this.base}/affiliate_program/${m[1]}`, slug: m[1] }); };
     const root = await af.get(`${this.base}/affiliate_program`, { tries: 2 }); grab(root.html || root.text || "");
-    const cats = [...new Set([...(root.html || root.text || "").matchAll(/href="(?:https:\/\/gooodbro\.com)?\/([A-Z][A-Za-z_]+-\d+)"/g)].map((m) => m[1]))];
+    const home = await af.get(`${this.base}/`, { tries: 2 });
+    const cats = [...new Set([...((home.html || home.text || "") + (root.html || root.text || "")).matchAll(/href="(?:https:\/\/gooodbro\.com)?\/([A-Z][A-Za-z_]+-\d+)"/g)].map((m) => m[1]))];
     for (const c of cats) { try { const r = await af.get(`${this.base}/${c}`, { tries: 1 }); grab(r.html || r.text || ""); } catch (e) {} await af.pace(1000); }
     return [...out.values()];
   },
