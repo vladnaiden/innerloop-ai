@@ -11,7 +11,8 @@ module.exports = {
     const h = String(html);
     const ind = Object.fromEntries([...h.matchAll(/indicator__name">\s*([^<]*?)\s*<\/span>\s*<span class="indicator__value">\s*([^<]*?)\s*</g)].map((m) => [text(m[1]), text(m[2])]));
     const conds = [...h.matchAll(/offer-hero__condition-name">\s*([\s\S]*?)<\/span>\s*<span class="offer-hero__condition-value">\s*([\s\S]*?)<\/span>/g)].map((m) => ({ action: text(m[1]), payout: text(m[2]) }));
-    const name = text(between(h, '<div class="h4">', "</div>").replace(/^[^>]*>/, "")).replace(/^Оффер\s+/, "") || text(between(h, "<h1", "</h1>").replace(/^<h1[^>]*>/, ""));
+    const h1 = text(between(h, "<h1", "</h1>").replace(/^<h1[^>]*>/, "")).replace(/^Оффер\s+/, "");
+    const name = h1 || text(between(h, '<div class="h4">', "</div>").replace(/^[^>]*>/, "")).replace(/^Оффер\s+/, "");
     const desc = text(between(h, 'class="user-text"', 'offer-hero__conditions').replace(/^[^>]*>/, "").replace(/<\/?html>|<\/?body>/g, "")).replace(/^Оффер\s+\S+\s*/, "").replace(/\s*Условия выплат\s*$/, "");
     const logo = (between(h, 'class="offer-hero', "offer-hero__connect").match(/<img[^>]+src="([^"]+)"/) || [])[1] || null;
     const crumbs = ((ldjson(h).find((j) => j["@type"] === "BreadcrumbList") || (ldjson(h).flatMap((j) => j["@graph"] || []).find((j) => j["@type"] === "BreadcrumbList")) || {}).itemListElement || []).map((x) => x.name);

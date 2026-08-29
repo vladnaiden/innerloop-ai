@@ -27,7 +27,7 @@ module.exports = {
     const founded = (card.match(/Дата основания:\s*<span[^>]*>(\d{4})</) || [])[1];
     const tags = [...card.matchAll(/programs-tag\/[^"]+"[^>]*>([^<]+)</g)].map((m) => text(m[1]));
     let desc = text(decode((card.match(/<div class="desc-company">([\s\S]*?)<\/div>/) || [])[1] || "").replace(/<[^>]+>/g, " "));
-    if (!desc) { const body = between(h, '<div class="cont', "</article>") || ""; desc = text(decode([...body.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)].slice(0, 4).map((m) => m[1]).join(" · ").replace(/<[^>]+>/g, " "))); }
+    if (!desc) { const body = h.slice(h.indexOf("</h1>") + 5).split(/Наши менеджеры|<footer|class="comments/)[0]; desc = text(decode([...body.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)].map((m) => m[1]).filter((t) => t.replace(/<[^>]+>/g, "").trim().length > 60).slice(0, 4).join(" · ").replace(/<[^>]+>/g, " "))); }
     const site = (card.match(/<div class="company-links">\s*<a target="_blank" href="([^"]+)"/) || [])[1] || null;
     const tg = (card.match(/href="(https:\/\/t\.me\/[^"]+)"/) || [])[1] || null;
     const kv = {}; for (const m of card.matchAll(/<div class="title">([^<]*)<\/div>\s*<div class="desc">([\s\S]*?)<\/div>/g)) kv[text(m[1])] = text(decode(m[2]).replace(/<[^>]+>/g, " "));
