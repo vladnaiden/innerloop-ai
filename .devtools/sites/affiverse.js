@@ -7,14 +7,15 @@ const { text, decode, between, host } = require("./_common");
 const LABELS = ["CPA", "RevShare", "Rev Share", "Revenue Share", "HYBRID", "Hybrid", "Sub-Affiliate Commission", "Sub-affiliate", "Bundling", "Calculation formula", "Affiliate Software", "Tracking Link", "Cookie duration", "Cookie", "Supports API", "Postbacks", "Stats Update Time", "Stats Update Frequency", "Manual Report Available", "Dynamic Variables", "Minimum payout", "Min payout", "Payment methods", "Payment frequency", "Payout frequency", "Licence", "License", "Negative carryover", "Admin fee", "Founded", "Launched"];
 module.exports = {
   name: "affiverse", lang: "en", region: "global", base: "https://www.affiversemedia.com",
+  // The HTML listing shows ~44 profiles; the public WP REST API exposes the whole post type.
   async list(af) {
     const out = new Map();
-    for (let p = 1; p <= 30; p++) {
-      let r; try { r = await af.get(p === 1 ? `${this.base}/directory/affiliate-program/` : `${this.base}/directory/affiliate-program/page/${p}/`, { tries: 2 }); } catch (e) { if (/HTTP 404/.test(e.message)) break; throw e; }
-      const slugs = [...new Set([...(r.html || r.text || "").matchAll(/affiliate_directory\/([a-z0-9-]+)\//g)].map((m) => m[1]))];
-      if (!slugs.length) break;
-      for (const s of slugs) out.set(s, { url: `${this.base}/affiliate_directory/${s}/`, slug: s });
-      await af.pace(1200);
+    for (let p = 1; p <= 20; p++) {
+      let r; try { r = await af.get(`${this.base}/wp-json/wp/v2/affiliate_directory?per_page=100&page=${p}&_fields=slug,link`, { tries: 1, maxChars: 900000 }); } catch (e) { break; }
+      let a = []; try { a = JSON.parse(r.html || r.text || "[]"); } catch (e) { break; }
+      if (!Array.isArray(a) || !a.length) break;
+      for (const x of a) if (x.slug) out.set(x.slug, { url: `${this.base}/affiliate_directory/${x.slug}/`, slug: x.slug });
+      await af.pace(800);
     }
     return [...out.values()];
   },
