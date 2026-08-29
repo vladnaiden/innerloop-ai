@@ -18,7 +18,7 @@ module.exports = {
     const pill = (label) => text(decode((h.match(new RegExp(`>${label}:\\s*([^<]*)<`)) || [])[1] || ""));
     const cat = pill("Category"), comm = pill("Commission"), cookie = pill("Cookies");
     const site = (h.match(/rel="sponsored nofollow noopener" href="([^"]+)">Visit Website/) || [])[1] || null;
-    const desc = text(decode((between(h, ">Description</h3>", "</div></div></div></div>") || "").replace(/<[^>]+>/g, " "))).replace(/^More information\s*/, "");
+    const desc = text(decode((between(h, ">Description</h3>", "</div></div></div></div>") || "").replace(/<[^>]+>/g, " "))).replace(/^>?\s*Description\s*/, "").replace(/^More information\s*/, "");
     const verified = (h.match(/Last verified:\s*([A-Za-z]+ \d{1,2}, \d{4})/) || [])[1];
     const logo = (h.match(/<img alt="[^"]*logo"[^>]*src="([^"]+)"/) || [])[1];
     const pct = [...comm.matchAll(/(\d+(?:\.\d+)?)\s*%/g)].map((m) => +m[1]);
