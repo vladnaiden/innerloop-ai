@@ -28,17 +28,17 @@ module.exports = {
     const rows = {}; for (const m of h.matchAll(/rating-row_item_label">([^<]*)<\/div>\s*<div class="rating-row_item_value">([\s\S]*?)<\/div>\s*<\/div>/g)) { const v = text(decode(m[2]).replace(/<[^>]+>/g, " ")); if (v) rows[text(m[1])] = v; }
     const email = (h.match(/href="mailto:([^"]+)"/) || [])[1] || null;
     const signup = (h.match(/href="(https:\/\/goto\.15m\.com[^"]+)"/) || [])[1] || null;
-    const rs = text(decode((between(h, "ph-percent", '<div class="overview__item">') || "").replace(/<[^>]+>/g, " "))).replace(/^RevShare\s*/, "");
-    const cpa = text(decode((between(h, "ph-target", '<div class="overview__item">') || "").replace(/<[^>]+>/g, " "))).replace(/^CPA\s*/, "");
+    const sect = (icon) => { const m = h.match(new RegExp(`<i class="ph-bold ${icon}"[^>]*><\\/i>\\s*([^<]*)<\\/h3>\\s*<div class="overview-content__value">([\\s\\S]*?)<\\/div>`)); return m ? text(decode(m[2]).replace(/<[^>]+>/g, " ")) : ""; };
+    const rs = sect("ph-percent"), cpa = sect("ph-target");
     const pct = [...rs.matchAll(/(\d+(?:\.\d+)?)\s*%/g)].map((m) => +m[1]);
     const teaser = meta(h, "og:description") || "";
-    const desc = text(decode((between(h, "About " + name, "<h2") || "").replace(/<\/(p|li)>|<br\s*\/?>/g, " · ").replace(/<[^>]+>/g, " "))).replace(/^[^·]*<\/h2>\s*/, "").replace(/(\s*·\s*){2,}/g, " · ").replace(/^(\s*·\s*)+|(\s*·\s*)+$/g, "");
+    const desc = text(decode((between(h, "About " + name, "<h2") || "").replace(/<\/(p|li)>|<br\s*\/?>/g, " · ").replace(/<[^>]+>/g, " "))).replace(/^About [^·]*?(?=\s[A-Z][a-z])/, "").replace(/(\s*·\s*){2,}/g, " · ").replace(/^(\s*·\s*)+|(\s*·\s*)+$/g, "");
     const models = kv["Commission Models"] || [];
     const minp = (kv["Min Payout"] || [])[0] || "", mn = minp.match(/(\$|€|£)\s*([\d,]+)/);
     const cookie = ((kv["Cookie Duration"] || [])[0] || "").match(/(\d+)\s*Day/i);
     const founded = ((kv["Founded"] || [])[0] || "").match(/^\d{4}$/);
     return {
-      program_name: name, domain: `15m.${url.split("/").filter(Boolean).pop()}`, signup_url: signup || url, contact_email: email, logo_url: meta(h, "og:image") || null,
+      program_name: name, domain: `15m.${url.split("/").filter(Boolean).pop()}`, signup_url: signup || url, contact_email: email, logo_url: (h.match(/property="og:image(?::secure_url)?" content="([^"]+)"/) || [])[1] || null,
       description: [teaser, desc].filter(Boolean).join(" · ").slice(0, 4000) || null,
       commission: [rs && `RevShare: ${rs}`, cpa && `CPA: ${cpa}`].filter(Boolean).join(" | ").slice(0, 600) || null,
       commission_type: models.length > 1 ? "Hybrid" : /revenue share|revshare/i.test(models[0] || "") ? "RevShare" : /cpa/i.test(models[0] || "") ? "CPA" : null,
