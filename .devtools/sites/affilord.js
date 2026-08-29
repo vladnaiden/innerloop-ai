@@ -36,7 +36,7 @@ module.exports = {
     const type = models.length > 1 ? "Hybrid" : /rev share/i.test(models[0] || "") ? "RevShare" : /cpa/i.test(models[0] || "") ? "CPA" : /ppc/i.test(models[0] || "") ? "CPC" : models[0] || null;
     return {
       program_name: name, domain: site ? host(site) : `affilord.${url.split("/").filter(Boolean).pop()}`, landing_url: site, signup_url: site || url, contact_email: email, telegram: tg,
-      description: about.slice(0, 4000) || null, commission_type: type, commission_types: models.length ? models : null, recurring: models.some((m) => /rev share/i.test(m)) ? true : null,
+      description: about.replace(/^About\s*·?\s*/, "").slice(0, 4000) || null, commission_type: type, commission_types: models.length ? models : null, recurring: models.some((m) => /rev share/i.test(m)) ? true : null,
       payment_methods: tags("Payout Methods").length ? tags("Payout Methods") : null,
       tags: ["igaming", ...tags("Products").map((t) => t.toLowerCase())],
       extra: { geos: tags("GEOs"), licence: tags("License"), products: tags("Products"), negative_carryover: details["Negative Carryover"], admin_fee: details["Admin Fee"], live_support: details["Live Support"], accepts_crypto: details["Accepts Crypto"], looking_for_streamers: details["Looking for Streamers"] },
