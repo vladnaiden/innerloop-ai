@@ -46,11 +46,25 @@ async function upsert(db, row, slug, url, fetchedAt) {
   const sets = COLS.map((c, i) => `${c} = $${i + 6}`).join(", ");
   const base = [fullSlug, url, domain, name, JSON.stringify(extra), ...vals];
   // 1. our own row (by slug) — plain overwrite, this parser owns it
-  const r = await db.query(
-    `UPDATE mr_program SET detail_url = $2, source_url = $2, source_endpoint = 'GET ' || $2, source_fetched_at = now(),
-       domain = $3, program_name = $4, extra = COALESCE(extra,'{}'::jsonb) || $5::jsonb, parser_version = '${PV}', parsed_at = now(), enriched_at = now(), last_checked = now(),
-       site_adapter = '${SITE}', lang = '${site.lang}', region = '${site.region}', ${sets}
-     WHERE slug = $1 RETURNING seq`, base);
+  let r;
+  try {
+    r = await db.query(
+      `UPDATE mr_program SET detail_url = $2, source_url = $2, source_endpoint = 'GET ' || $2, source_fetched_at = now(),
+         domain = $3, program_name = $4, extra = COALESCE(extra,'{}'::jsonb) || $5::jsonb, parser_version = '${PV}', parsed_at = now(), enriched_at = now(), last_checked = now(),
+         site_adapter = '${SITE}', lang = '${site.lang}', region = '${site.region}', ${sets}
+       WHERE slug = $1 RETURNING seq`, base);
+  } catch (e) {
+    if (e.code !== "23505") throw e;
+    // a re-parse renamed our row onto a brand that already exists from another source:
+    // fill that brand row's gaps and retire our duplicate instead of keeping two rows for one programme
+    await db.query(
+      `UPDATE mr_program SET ${COLS.map((c, i) => `${c} = COALESCE(mr_program.${c}, $${i + 6})`).join(", ")},
+         extra = COALESCE(extra,'{}'::jsonb) || jsonb_build_object('also_on', COALESCE(extra->'also_on','[]'::jsonb) || to_jsonb('${SITE}'::text)) || ($5::jsonb - 'provenance'), last_checked = now()
+       WHERE domain = $3 AND program_name = $4 AND slug <> $1`, base);
+    await db.query(`DELETE FROM mr_program WHERE slug = $1`, [fullSlug]);
+    metric({ ev: "merged", slug, domain, name, via: "rename" });
+    return "merged";
+  }
   if (r.rowCount) return "updated";
   try {
     await db.query(
