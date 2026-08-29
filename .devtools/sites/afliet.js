@@ -27,7 +27,8 @@ module.exports = {
     const pct = !unc(comm) ? [...comm.matchAll(/(\d+(?:\.\d+)?)\s*%/g)].map((m) => +m[1]) : [];
     const cookie = !unc(kv["مدة الكوكيز"]) ? (AR(kv["مدة الكوكيز"] || "").match(/(\d+)\s*(يوم|أيام|days?)/) || [])[1] : null;
     const crumbs = ldjson(h).find((j) => j && j["@type"] === "BreadcrumbList");
-    const bc = crumbs && crumbs.itemListElement ? crumbs.itemListElement.slice(1, -1).map((x) => text(x.name || "")).filter(Boolean) : [];
+    let bc = crumbs && crumbs.itemListElement ? crumbs.itemListElement.slice(1, -1).map((x) => text(x.name || "")).filter(Boolean) : [];
+    if (!bc.length) { const f = h.replace(/<[^>]+>/g, " ").match(/موقع العمولة في مجال\s+([^<|]{2,40}?)\s{2,}/); if (f) bc = [text(f[1])]; }
     const cardText = Object.values(kv).join(" ");
     const net = (cardText.match(/\b(Impact|Awin|CJ|ShareASale|Rakuten|PartnerStack|Admitad|ArabClicks|Commission Junction|Tradedoubler|Partnerize)\b/) || [])[1] || null;
     const type = /CPS/.test(model) ? "CPS" : /CPL/.test(model) ? "CPL" : /CPA/.test(model) ? "CPA" : /RevShare|إيراد/.test(model) ? "RevShare" : null;
