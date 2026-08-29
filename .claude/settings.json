@@ -37,6 +37,17 @@
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -x scripts/guard-kill.sh ] && bash scripts/guard-kill.sh || true"
+          }
+        ]
+      }
     ]
   }
 }

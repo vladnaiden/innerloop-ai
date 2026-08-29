@@ -13,7 +13,7 @@ const KEEP = { "signup.cj.com": ["cid"], "www.cj.com": ["cid"], "members.cj.com"
 const STRONG = new Set(["affid", "aff_id", "affiliate_id", "affiliateid", "aff_sub", "aff_click_id", "sub1", "sub2", "sub3", "subid", "sub_id", "sub_id1", "sub_id2", "sub_id3", "sub_id4", "sub_id5", "subid1", "clickid", "click_id", "irclickid", "cjevent", "awc", "zanpid", "transaction_id", "_ef_transaction_id", "tracking_id", "trkid", "trk_id", "hop", "hopid", "sscid", "rfsn", "mbsy", "refid", "partner_id", "partnerid", "pid", "uid", "oid", "afftrack", "afmc", "raf", "aff", "sid"]);
 // directory brands whose name inside a URL is attribution to that directory, wherever it sits
 const BRANDS = /(affiliatewatch|affwatch|affiliate-watch|affililist|offervault|affpaying|uppromote|linkclicky|cuelinks|topranked|15m\.com|affnext|affcaptain|partnerkin|palaimedia|leadpandamedia|gdetraffic|affmoment|statsdrone|affcatalog|affroom|affbank|businessofapps|afftank|cpa[-_.]?club|getreditus|reditus|affiliateroll|partnerstack|indoleads|affiliatekatalog|affiverse|affilord|findaffiliates|afliet|alverde|e-provize|vivnetworks|2performant|profitshare|gambling-partnerki|gooodbro|travelpayouts|affisearch|affdays|affhub|uaff|palai|conversion\.im|cpainform|cpad\.pro|affplus|affbun|lasso)/i;
-const PLACEHOLDER = /\{[a-z_]+\}|\[\[|%7B[a-z_]+%7D/i;
+const PLACEHOLDER = /\{[a-z_]+\}|\[\[|%7B[a-z_]+%7D|#[a-z_]+#/i;
 function clean(url) {
   if (!url || typeof url !== "string") return { url: null, changed: false, reason: null };
   let u = url.trim().replace(/&amp;|&#038;/g, "&");
@@ -36,6 +36,8 @@ function clean(url) {
   if (/\/(signup|register|sign-up|registration|join)\b/i.test(p.pathname) && [...p.searchParams.keys()].some((k) => PARAMS.has(k.toLowerCase()))) {
     // network sign-up form carrying a referrer id: keep the form, drop the referrer
   }
+  // hash-routed SPAs put the query after "#": treat strong keys there as a tracking link too
+  if (p.hash.includes("?")) { const hk = [...new URLSearchParams(p.hash.split("?")[1]).keys()].map((k) => k.toLowerCase()); if (hk.some((k) => STRONG.has(k))) return { url: null, changed: true, reason: "affiliate-link" }; }
   const keep = new Set((KEEP[host] || []).map((k) => k.toLowerCase()));
   const keys = [...p.searchParams.keys()].map((k) => k.toLowerCase()).filter((k) => !keep.has(k));
   if (keys.some((k) => STRONG.has(k)) && !/\/(signup|sign-up|register|registration|join|affiliate|affiliates|partners?)\b/i.test(p.pathname)) return { url: null, changed: true, reason: "affiliate-link" };
