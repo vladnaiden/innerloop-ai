@@ -163,6 +163,7 @@ replays stored pages offline; `--max-age-days` re-fetches old ones.
 | `gooodbro` | gooodbro.com/affiliate_program?page=N → /affiliate_program/<slug> | Gooodbro CPA-network catalogue (same engine as Где Трафик): offer types, features, payment systems, payout terms, hold, tags — only ~25 profiles despite 25 vertical categories | ~25 |
 | `gambling_partnerki` | gambling-partnerki.com/affiliates/<slug>/ | RU gambling-network rating: rating /5, launch year, income models, minimum, offers, GEO, software, reporting period, payout speed, payment systems, sub-affiliate % | ~25 |
 | `leadpanda` | leadpanda.media/partner-cat/all/page/N → /partner/<slug>/ | Lead Panda Media (UA) network reviews: short description, rating /5 + reviews, network site, categories, payment models mentioned | ~150 |
+| `topranked` | topranked.io/all-listings (listing-sitemapN.xml) | TopRanked.io directory: headline commission teaser, category, review count, affiliate-registration link, overview + review sections | ~310 |
 
 Rejected after probing: getlasso.co / affiliateprogramdb.com (403 on every exit),
 gdetraffic.com root (article feed — the `/Partnerki` catalogue is now a module), theaffiliateslist (paywalled),
