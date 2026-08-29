@@ -8,6 +8,7 @@
  */
 const fs = require("fs"), path = require("path"), zlib = require("zlib");
 const { Client } = require("pg");
+const { clean: cleanUrl } = require("./url_clean");
 const af = require("./af.js");
 const crypto = require("crypto");
 const arg = (k, d) => { const i = process.argv.indexOf(k); return i === -1 ? d : process.argv[i + 1]; };
@@ -34,6 +35,8 @@ const COLS = ["landing_url", "signup_url", "logo_url", "description", "network",
   "countries", "currency", "min_payout", "hold_days", "payment_methods", "payment_frequency", "contact_email", "socials", "affiliate_managers", "phone", "telegram", "skype", "rating_avg", "rating_count", "offers_count", "vertical"];
 
 async function upsert(db, row, slug, url, fetchedAt) {
+  for (const col of ["signup_url", "landing_url"]) if (row[col]) { const c = cleanUrl(row[col]); if (c.changed) row[col] = c.url; }
+  if (!row.signup_url && row.landing_url) row.signup_url = row.landing_url;
   const domain = row.domain || `${SITE}.${slug}`;
   const name = row.program_name; if (!name) throw new Error("no program_name");
   const fullSlug = `${SITE}-${slug}`.toLowerCase().slice(0, 120);
