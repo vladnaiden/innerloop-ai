@@ -37,7 +37,7 @@ module.exports = {
     const direct = signup && !/redirect|\/go\/|track|\?a=|aff|pid=/i.test(signup) ? host(signup) : null;
     return {
       program_name: name, domain: direct || `topranked.${url.split("/").filter(Boolean).pop()}`, signup_url: signup || url,
-      description: [overview, ...sections.map(([k, v]) => `${k}: ${v}`)].filter(Boolean).join(" · ").slice(0, 4000) || null,
+      description: [overview.replace(/^Program Overview\s*/, ""), ...sections.map(([k, v]) => `${k}: ${v}`)].filter(Boolean).join(" · ").slice(0, 4000) || null,
       commission: teaser || null, commission_type: rs ? (flat ? "Hybrid" : "RevShare") : /per (lead|application|signup)|CPL/i.test(teaser) ? "CPL" : pct.length ? "CPS" : flat ? "CPA" : null,
       pct_min: pct.length ? Math.min(...pct) : null, pct_max: pct.length ? Math.max(...pct) : null, flat_max: flat ? parseFloat(flat.replace(/,/g, "")) : null, currency: flat ? "USD" : null,
       recurring: rs ? true : null, rating_count: reviews ? +reviews : null,
