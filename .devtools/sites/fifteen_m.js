@@ -32,7 +32,7 @@ module.exports = {
     const rs = sect("ph-percent"), cpa = sect("ph-target");
     const pct = [...rs.matchAll(/(\d+(?:\.\d+)?)\s*%/g)].map((m) => +m[1]);
     const teaser = meta(h, "og:description") || "";
-    const desc = text(decode((between(h, "About " + name, "<h2") || "").replace(/<\/(p|li)>|<br\s*\/?>/g, " · ").replace(/<[^>]+>/g, " "))).replace(/^About [^·]*?(?=\s[A-Z][a-z])/, "").replace(/(\s*·\s*){2,}/g, " · ").replace(/^(\s*·\s*)+|(\s*·\s*)+$/g, "");
+    const desc = text(decode((between(h, "About " + name, "<h2") || "").replace(/<\/(p|li)>|<br\s*\/?>/g, " · ").replace(/<[^>]+>/g, " "))).replace(new RegExp("^About " + name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\s*"), "").replace(/(\s*·\s*){2,}/g, " · ").replace(/^(\s*·\s*)+|(\s*·\s*)+$/g, "");
     const models = kv["Commission Models"] || [];
     const minp = (kv["Min Payout"] || [])[0] || "", mn = minp.match(/(\$|€|£)\s*([\d,]+)/);
     const cookie = ((kv["Cookie Duration"] || [])[0] || "").match(/(\d+)\s*Day/i);
