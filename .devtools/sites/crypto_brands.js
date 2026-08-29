@@ -29,13 +29,16 @@ module.exports = {
     if (!h) { const e = new Error("no affiliate page"); e.gone = true; throw e; }
     const src = (h.match(/^<!--src:([^>]+)-->/) || [])[1] || url;
     const plain = h.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
-    const terms = parseTerms(plain);
+    // only sentences about the programme itself count; fee tables ("withdrawal commission 0.1%") and
+    // product settings ("set the commission up to 5%") are not affiliate rates
+    const sentences = plain.split(/(?<=[.!?])\s+|\s{2,}/).filter((t) => /(affiliate|referral|partner|rev(?:enue)? ?share|sub-?affiliate|per (?:referred|new) (?:user|trader|customer))/i.test(t) && !/(withdrawal|deposit|maker|taker|trading fee|network fee|processing fee|set the commission|choose.{0,20}commission)/i.test(t));
+    const terms = parseTerms(sentences.join(" "));
     const domain = new URL(src).hostname.replace(/^www\./, "");
     const title = text((h.match(/<title>([^<]*)/) || [])[1] || "");
     let brand = title.split(/[|–—:-]/)[0].trim();
     if (!brand || brand.length > 40 || /earn|commission|program/i.test(brand)) brand = domain.replace(/\.[a-z.]+$/, "").replace(/^(app|www)\./, "");
     brand = brand.charAt(0).toUpperCase() + brand.slice(1);
-    const teaser = (plain.match(/[^.]{0,80}(?:commission|revenue share|rebate)[^.]{0,120}/i) || [])[0];
+    const teaser = sentences.find((t) => /(commission|revenue share|rebate|earn)/i.test(t) && /\d/.test(t)) || sentences[0];
     if (!Object.keys(terms).length && !teaser) { const e = new Error("affiliate page without published terms"); e.gone = true; throw e; }
     return {
       program_name: brand.replace(/\s*(affiliate program|affiliates?|partners?)\s*$/i, "") || domain, domain, landing_url: `https://${domain}`, signup_url: src,
