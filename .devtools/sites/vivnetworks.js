@@ -10,7 +10,7 @@ module.exports = {
     const out = new Map(); let stale = 0;
     for (let p = 1; p <= 40 && stale < 2; p++) {
       let r; try { r = await af.get(p === 1 ? `${this.base}/affiliate-katalog/` : `${this.base}/affiliate-katalog/page/${p}/`, { tries: 2, maxChars: 2000000 }); } catch (e) { if (/HTTP 404/.test(e.message)) break; throw e; }
-      const slugs = [...new Set([...(r.html || r.text || "").matchAll(/affiliate-katalog\/([a-z0-9-]+)\//g)].map((m) => m[1]))].filter((s) => s !== "page");
+      const slugs = [...new Set([...(r.html || r.text || "").matchAll(/affiliate-katalog\/([a-z0-9-]+)\//g)].map((m) => m[1]))].filter((s) => !/^(page|feed)$/.test(s));
       const fresh = slugs.filter((s) => !out.has(s)); stale = fresh.length ? 0 : stale + 1;
       for (const s of fresh) out.set(s, { url: `${this.base}/affiliate-katalog/${s}/`, slug: s });
       await af.pace(1200);
@@ -40,7 +40,7 @@ module.exports = {
     const site = name.includes(".") && !/\s/.test(name) ? name.toLowerCase() : null;
     return {
       program_name: name, domain: site || `vivnetworks.${url.split("/").filter(Boolean).pop()}`, landing_url: site ? `https://${site}` : null, signup_url: url, logo_url: meta(h, "og:image") || null,
-      description: desc.slice(0, 4000) || null, network: "VIVnetworks",
+      description: desc.replace(/^O inzerentovi\s*·?\s*/, "").slice(0, 4000) || null, network: "VIVnetworks",
       commission: [comm && `base ${comm}`, ...tiers.filter((t) => t.channel !== "base").map((t) => `${t.channel}: ${t.value}`)].filter(Boolean).join("; ") || null,
       commission_type: pct.length || allPct.length ? "CPS" : czk ? "CPA" : null,
       pct_min: allPct.length ? Math.min(...allPct) : null, pct_max: allPct.length ? Math.max(...allPct) : null,

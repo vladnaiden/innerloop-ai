@@ -157,7 +157,7 @@ replays stored pages offline; `--max-age-days` re-fetches old ones.
 | `affmoment` | affmoment.com/partnerki/<slug>/ | AffMoment (RU) network profiles: vertical, payment model, minimum, payout methods, features, site + email, rating /10, reviews, description | ~150 |
 | `fifteen_m` | 15m.com/affiliate-programs (WP REST `affiliate_programs`) | 15M iGaming programme reviews: verticals, traffic sources, commission models, sub-affiliate, min payout, founded, GEOs, cookie, support, licence, contact email, sign-up link, RevShare % range | ~60 |
 | `afliet` | afliet.com/program/<slug> (sitemap) | أفلييت Arabic directory (MENA): commission model + %, cookie, payment methods, min withdrawal, frequency, Arabic support, acceptance ease, sign-up link — "غير مؤكد" never numerised | ~110 |
-| `vivnetworks` | vivnetworks.com/affiliate-katalog (paginated) | VIVnetworks (CEE network): commission + per-channel tiers, cookie, condition grid (SEM, XML feed, coupons, S2S, cashback, creatives), category, named manager + email, description | ~300 |
+| `vivnetworks` | vivnetworks.com/affiliate-katalog (paginated) | VIVnetworks (CEE network): commission + per-channel tiers, cookie, condition grid (SEM, XML feed, coupons, S2S, cashback, creatives), category, named manager + email, description | ~650 |
 
 Rejected after probing: getlasso.co / affiliateprogramdb.com (403 on every exit),
 gdetraffic.com root (article feed — the `/Partnerki` catalogue is now a module), theaffiliateslist (paywalled),
