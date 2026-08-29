@@ -5,16 +5,12 @@
 const { text, decode, between } = require("./_common");
 module.exports = {
   name: "gooodbro", lang: "ru", region: "RU", base: "https://gooodbro.com",
+  // No pager on the catalogue root; profiles are linked from ~25 vertical category pages (/<Cat>-<id>).
   async list(af) {
-    const out = new Map(); let stale = 0;
-    for (let p = 1; p <= 40 && stale < 2; p++) {
-      const r = await af.get(`${this.base}/affiliate_program?page=${p}`, { tries: 2 });
-      const slugs = [...new Set([...(r.html || r.text || "").matchAll(/affiliate_program\/([A-Za-z0-9_-]+)/g)].map((m) => m[1]))];
-      const fresh = slugs.filter((s) => !out.has(s));
-      stale = fresh.length ? 0 : stale + 1;
-      for (const s of fresh) out.set(s, { url: `${this.base}/affiliate_program/${s}`, slug: s });
-      await af.pace(1200);
-    }
+    const out = new Map(); const grab = (h) => { for (const m of String(h).matchAll(/affiliate_program\/([A-Za-z0-9_-]+)/g)) if (m[1] !== "amp" && !out.has(m[1])) out.set(m[1], { url: `${this.base}/affiliate_program/${m[1]}`, slug: m[1] }); };
+    const root = await af.get(`${this.base}/affiliate_program`, { tries: 2 }); grab(root.html || root.text || "");
+    const cats = [...new Set([...(root.html || root.text || "").matchAll(/href="(?:https:\/\/gooodbro\.com)?\/([A-Z][A-Za-z_]+-\d+)"/g)].map((m) => m[1]))];
+    for (const c of cats) { try { const r = await af.get(`${this.base}/${c}`, { tries: 1 }); grab(r.html || r.text || ""); } catch (e) {} await af.pace(1000); }
     return [...out.values()];
   },
   urlFor(slug) { return `${this.base}/affiliate_program/${slug}`; },
@@ -31,8 +27,8 @@ module.exports = {
     const hold = (kv["Холд"] || "").match(/(\d+)(?:\s*-\s*(\d+))?\s*дн/);
     const types = (kv["Типы офферов"] || "").split(/\s*,\s*/).filter(Boolean);
     return {
-      program_name: name.replace(/\s+партнерская сеть.*$/i, "").replace(/\s+—.*$/, ""), domain: `gooodbro.${url.split("/").pop().toLowerCase()}`, signup_url: url,
-      description: (desc || short).replace(/^(\s*·\s*)+/, "").slice(0, 4000) || null,
+      program_name: name.replace(/\s+партнерка.*$/i, "").replace(/\s+партнерская сеть.*$/i, "").replace(/\s+—.*$/, ""), domain: `gooodbro.${url.split("/").pop().toLowerCase()}`, signup_url: url,
+      description: ((desc || short).replace(/^(\s*·\s*)+/, "") || text(decode((h.match(/<meta name="description" content="([^"]*)"/) || [])[1] || ""))).slice(0, 4000) || null,
       payment_methods: kv["Платежные системы"] ? kv["Платежные системы"].split(/\s*,\s*/) : null, payment_frequency: kv["Выплата"] || null,
       hold_days: hold ? +(hold[2] || hold[1]) : null,
       tags: [...new Set([...types.map((t) => t.toLowerCase()), ...tags.map((t) => t.toLowerCase())])].slice(0, 20),
