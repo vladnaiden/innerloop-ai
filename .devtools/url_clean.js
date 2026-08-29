@@ -16,7 +16,7 @@ const BRANDS = /(affiliatewatch|affwatch|affiliate-watch|affililist|offervault|a
 const PLACEHOLDER = /\{[a-z_]+\}|\[\[|%7B[a-z_]+%7D|#[a-z_]+#/i;
 function clean(url) {
   if (!url || typeof url !== "string") return { url: null, changed: false, reason: null };
-  let u = url.trim().replace(/&amp;|&#038;/g, "&");
+  let u = url.trim().replace(/&amp;|&#038;/g, "&").replace(/\?\?+/g, "?");
   if (!/^https?:\/\//i.test(u)) return { url: null, changed: true, reason: "not-http" };
   if (PLACEHOLDER.test(u)) return { url: null, changed: true, reason: "tracking-template" };
   let p; try { p = new URL(u); } catch (e) { return { url: null, changed: true, reason: "unparseable" }; }
