@@ -31,7 +31,7 @@ module.exports = {
     const s = site ? site.replace(/\?utm_source=leadpandamediareview.*$/, "") : null;
     return {
       program_name: name, domain: s ? host(s) : `leadpanda.${url.split("/").filter(Boolean).pop()}`, landing_url: s, signup_url: s || url,
-      description: [short, desc].filter(Boolean).join(" · ").slice(0, 4000) || null,
+      description: (desc.startsWith(short.slice(0, 40)) ? desc : [short, desc].filter(Boolean).join(" · ")).slice(0, 4000) || null,
       rating_avg: sc ? +sc[1] : null, rating_count: sc ? +sc[2] : null,
       commission_types: models.length ? models : null, recurring: models.some((m) => /revshare/i.test(m)) ? true : null,
       tags: cats, extra: { models_mentioned: models.length ? models : undefined },
