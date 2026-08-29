@@ -20,11 +20,14 @@ module.exports = {
   parse(html, url) {
     const h = String(html);
     const card = between(h, '<div class="teaser-info-block"', '<div class="cont') || between(h, '<div class="teaser-info-block"', "</section>") || "";
-    const name = text(decode((card.match(/<div class="name">\s*([\s\S]*?)\s*<\/div>/) || [])[1] || ""));
+    let name = text(decode((card.match(/<div class="name">\s*([\s\S]*?)\s*<\/div>/) || [])[1] || ""));
+    // older reviews have no teaser card: take the title and strip the "отзывы, обзор…" tail
+    if (!name) name = text(decode((h.match(/<h1[^>]*class="title_single"[^>]*>([\s\S]*?)<\/h1>/) || [])[1] || "")).replace(/\s*[—–-]\s*отзывы.*$/i, "").replace(/^Обзор партнерской программы\s+/i, "").replace(/\s*[—–-]\s*обзор.*$/i, "").trim();
     if (!name) throw new Error("no name");
     const founded = (card.match(/Дата основания:\s*<span[^>]*>(\d{4})</) || [])[1];
     const tags = [...card.matchAll(/programs-tag\/[^"]+"[^>]*>([^<]+)</g)].map((m) => text(m[1]));
-    const desc = text(decode((card.match(/<div class="desc-company">([\s\S]*?)<\/div>/) || [])[1] || "").replace(/<[^>]+>/g, " "));
+    let desc = text(decode((card.match(/<div class="desc-company">([\s\S]*?)<\/div>/) || [])[1] || "").replace(/<[^>]+>/g, " "));
+    if (!desc) { const body = between(h, '<div class="cont', "</article>") || ""; desc = text(decode([...body.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)].slice(0, 4).map((m) => m[1]).join(" · ").replace(/<[^>]+>/g, " "))); }
     const site = (card.match(/<div class="company-links">\s*<a target="_blank" href="([^"]+)"/) || [])[1] || null;
     const tg = (card.match(/href="(https:\/\/t\.me\/[^"]+)"/) || [])[1] || null;
     const kv = {}; for (const m of card.matchAll(/<div class="title">([^<]*)<\/div>\s*<div class="desc">([\s\S]*?)<\/div>/g)) kv[text(m[1])] = text(decode(m[2]).replace(/<[^>]+>/g, " "));
