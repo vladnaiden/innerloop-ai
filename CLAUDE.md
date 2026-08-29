@@ -244,6 +244,12 @@ bash .devtools/watch_sources.sh
   carries them; exports go through `/api/export` with a per-account watermark; payments are a
   merchant of record (Lemon Squeezy, `lib/billing.ts`) — see `DEPLOY.md` "Plans, exports and
   payments". Signed-in checks: `node ops/probe_plans.mjs`.
+- **URL hygiene (29.08.2026).** `signup_url` / `landing_url` must never carry another directory's
+  attribution. `.devtools/url_clean.js` (rules as data: tracking hosts/paths, attribution params, a
+  "strong key" list that drops whole tracking links, directory-brand tokens in params/paths/hashes,
+  an own-host list for provenance links, per-host keep-lists like CJ's `cid`) runs inside
+  `crawl_sites.js` on every upsert; `clean_urls.js [--dry]` re-runs it over the table and logs every
+  change to `backups/url_clean_<ts>.jsonl`. A dropped signup URL falls back to the cleaned landing page.
 - Novelty >=20% means stop and look. It found `Affiliate Managers` on a live page
   that existed in no other sample.
 - A rebuild that only changes class hashes must score ~0%: build-generated classes
