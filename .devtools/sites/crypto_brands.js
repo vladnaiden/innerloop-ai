@@ -32,7 +32,9 @@ module.exports = {
     const terms = parseTerms(plain);
     const domain = new URL(src).hostname.replace(/^www\./, "");
     const title = text((h.match(/<title>([^<]*)/) || [])[1] || "");
-    const brand = title.split(/[|–—-]/)[0].trim() || domain;
+    let brand = title.split(/[|–—:-]/)[0].trim();
+    if (!brand || brand.length > 40 || /earn|commission|program/i.test(brand)) brand = domain.replace(/\.[a-z.]+$/, "").replace(/^(app|www)\./, "");
+    brand = brand.charAt(0).toUpperCase() + brand.slice(1);
     const teaser = (plain.match(/[^.]{0,80}(?:commission|revenue share|rebate)[^.]{0,120}/i) || [])[0];
     if (!Object.keys(terms).length && !teaser) { const e = new Error("affiliate page without published terms"); e.gone = true; throw e; }
     return {
