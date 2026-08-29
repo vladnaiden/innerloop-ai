@@ -160,6 +160,8 @@ replays stored pages offline; `--max-age-days` re-fetches old ones.
 | `vivnetworks` | vivnetworks.com/affiliate-katalog (paginated) | VIVnetworks (CEE network): commission + per-channel tiers, cookie, condition grid (SEM, XML feed, coupons, S2S, cashback, creatives), category, named manager + email, description | ~650 |
 | `affilord` | affilord.com (WP REST `affiliate_programs`) | Affilord crypto-casino programme directory: site, Telegram, email, about, GEO regions, licence, products, commission types, payout methods, carryover / admin-fee / crypto / streamer flags | ~130 |
 | `travelpayouts` | travelpayouts.com/brands-directory (page's own `api.php?type=graph` JSON) | Travelpayouts public brands: reward rate, cookie lifetime + other offer params, categories, caption, hot/exclusive flags, offer landing — one record per brand | 46 |
+| `gooodbro` | gooodbro.com/affiliate_program?page=N → /affiliate_program/<slug> | Gooodbro CPA-network catalogue (same engine as Где Трафик): offer types, features, payment systems, payout terms, hold, tags | ~? |
+| `gambling_partnerki` | gambling-partnerki.com/affiliates/<slug>/ | RU gambling-network rating: rating /5, launch year, income models, minimum, offers, GEO, software, reporting period, payout speed, payment systems, sub-affiliate % | ~25 |
 
 Rejected after probing: getlasso.co / affiliateprogramdb.com (403 on every exit),
 gdetraffic.com root (article feed — the `/Partnerki` catalogue is now a module), theaffiliateslist (paywalled),
