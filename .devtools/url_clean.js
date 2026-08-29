@@ -28,7 +28,8 @@ function clean(url) {
   }
   if (TRACKING_HOSTS.test(host)) return { url: null, changed: true, reason: "tracking-host" };
   if (/(^|\.)affiliate\.watch$/.test(host)) return { url: null, changed: true, reason: "directory-own-link" };
-  if (BRANDS.test(p.pathname) || BRANDS.test(p.hash)) return { url: null, changed: true, reason: "brand-in-path" };
+  // a directory's OWN page (its name in the host) is provenance, not attribution — only a third-party host carrying the token is
+  if (!BRANDS.test(host) && (BRANDS.test(p.pathname) || BRANDS.test(p.hash))) return { url: null, changed: true, reason: "brand-in-path" };
   for (const [k, v] of [...p.searchParams.entries()]) if (BRANDS.test(v)) p.searchParams.delete(k);
   if (TRACKING_PATHS.test(p.pathname + p.search)) return { url: null, changed: true, reason: "tracking-path" };
   if (/\/(signup|register|sign-up|registration|join)\b/i.test(p.pathname) && [...p.searchParams.keys()].some((k) => PARAMS.has(k.toLowerCase()))) {
