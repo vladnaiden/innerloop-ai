@@ -3,7 +3,7 @@
 // payment methods, minimum withdrawal, payment frequency, Arabic support, acceptance ease),
 // official sign-up link, English + Arabic names, niche. "غير مؤكد" (unconfirmed) values are kept
 // as raw text but never turned into numbers. Listing: sitemap.xml /program/* entries.
-const { text, decode, between, host } = require("./_common");
+const { text, decode, between, host, ldjson } = require("./_common");
 const AR = (s) => String(s).replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/٪/g, "%");
 module.exports = {
   name: "afliet", lang: "ar", region: "MENA", base: "https://afliet.com",
@@ -26,8 +26,10 @@ module.exports = {
     const unc = (v) => /غير مؤكد/.test(v || "");
     const pct = !unc(comm) ? [...comm.matchAll(/(\d+(?:\.\d+)?)\s*%/g)].map((m) => +m[1]) : [];
     const cookie = !unc(kv["مدة الكوكيز"]) ? (AR(kv["مدة الكوكيز"] || "").match(/(\d+)\s*(يوم|أيام|days?)/) || [])[1] : null;
-    const bc = [...h.matchAll(/href="\/niche\/[a-z0-9-]+"[^>]*>([^<]*)</g)].map((m) => text(m[1])).filter(Boolean);
-    const net = (h.match(/\b(Impact|Awin|CJ|ShareASale|Rakuten|PartnerStack|Admitad|ArabClicks|Commission Junction|Tradedoubler|Partnerize)\b/) || [])[1] || null;
+    const crumbs = ldjson(h).find((j) => j && j["@type"] === "BreadcrumbList");
+    const bc = crumbs && crumbs.itemListElement ? crumbs.itemListElement.slice(1, -1).map((x) => text(x.name || "")).filter(Boolean) : [];
+    const cardText = Object.values(kv).join(" ");
+    const net = (cardText.match(/\b(Impact|Awin|CJ|ShareASale|Rakuten|PartnerStack|Admitad|ArabClicks|Commission Junction|Tradedoubler|Partnerize)\b/) || [])[1] || null;
     const type = /CPS/.test(model) ? "CPS" : /CPL/.test(model) ? "CPL" : /CPA/.test(model) ? "CPA" : /RevShare|إيراد/.test(model) ? "RevShare" : null;
     return {
       program_name: name, domain: join ? host(join) : `afliet.${url.split("/").pop()}`, landing_url: join ? `https://${host(join)}` : null, signup_url: join || url,
