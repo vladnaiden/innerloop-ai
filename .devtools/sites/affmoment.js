@@ -33,7 +33,7 @@ module.exports = {
     const rating = (h.match(/Рейтинг партнерки\s*([\d.]+)\s*\/\s*10/) || [])[1];
     const reviews = (h.match(/Отзывы и вопросы<\/span>\s*<span>(\d+)</) || [])[1];
     const updated = (h.match(/<span>(\d{2}\.\d{2}\.\d{4})<\/span>/) || [])[1];
-    const desc = text(decode((between(h, 'id="description"', '<div class="aff_post__item-block"') || between(h, "Описание партнерской программы</h2>", "<h2") || "").replace(/<\/(p|li|h\d)>|<br\s*\/?>/g, " · ").replace(/<[^>]+>/g, " "))).replace(/^Описание партнерской программы\s*·?\s*/, "").replace(/(\s*·\s*){2,}/g, " · ").replace(/^(\s*·\s*)+|(\s*·\s*)+$/g, "");
+    const desc = text(decode((between(h, 'id="description"', '<div class="aff_post__item-block"') || between(h, "Описание партнерской программы</h2>", "<h2") || "").replace(/^[^>]*>/, "").replace(/<\/(p|li|h\d)>|<br\s*\/?>/g, " · ").replace(/<[^>]+>/g, " "))).replace(/^Описание партнерской программы\s*·?\s*/, "").replace(/(\s*·\s*){2,}/g, " · ").replace(/^(\s*·\s*)+|(\s*·\s*)+$/g, "");
     const model = kv["Модель оплаты"] || "";
     const minp = kv["Минималка"] || "";
     const mn = minp.match(/(\$|€)?\s*([\d\s]+)\s*(\$|€|руб|₽|USD|EUR)?/);
