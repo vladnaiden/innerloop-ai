@@ -159,6 +159,7 @@ replays stored pages offline; `--max-age-days` re-fetches old ones.
 | `afliet` | afliet.com/program/<slug> (sitemap) | أفلييت Arabic directory (MENA): commission model + %, cookie, payment methods, min withdrawal, frequency, Arabic support, acceptance ease, sign-up link — "غير مؤكد" never numerised | ~110 |
 | `vivnetworks` | vivnetworks.com/affiliate-katalog (paginated) | VIVnetworks (CEE network): commission + per-channel tiers, cookie, condition grid (SEM, XML feed, coupons, S2S, cashback, creatives), category, named manager + email, description | ~650 |
 | `affilord` | affilord.com (WP REST `affiliate_programs`) | Affilord crypto-casino programme directory: site, Telegram, email, about, GEO regions, licence, products, commission types, payout methods, carryover / admin-fee / crypto / streamer flags | ~130 |
+| `travelpayouts` | travelpayouts.com/brands-directory (page's own `api.php?type=graph` JSON) | Travelpayouts public brands: reward rate, cookie lifetime + other offer params, categories, caption, hot/exclusive flags, offer landing — one record per brand | ~100 |
 
 Rejected after probing: getlasso.co / affiliateprogramdb.com (403 on every exit),
 gdetraffic.com root (article feed — the `/Partnerki` catalogue is now a module), theaffiliateslist (paywalled),
