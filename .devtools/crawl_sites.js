@@ -28,11 +28,14 @@ const PV = crypto.createHash("sha1").update(fs.readFileSync(path.join(__dirname,
 const metric = (o) => { try { fs.appendFileSync(METRICS, JSON.stringify({ t: new Date().toISOString(), job: SITE, ...o }) + "\n"); } catch {} };
 const load = () => { try { return JSON.parse(fs.readFileSync(STATE, "utf8")); } catch { return { done: {}, failed: {} }; } };
 const save = (s) => { const tmp = `${STATE}.${process.pid}.tmp`; fs.writeFileSync(tmp, JSON.stringify(s)); fs.renameSync(tmp, STATE); };
+const { canonRow, CANON_COLS } = require("./canon.js");
+
 const rawPath = (slug) => path.join(RAW, `${slug.replace(/[^a-z0-9._-]+/gi, "_")}.html.gz`);
 
 const COLS = ["landing_url", "signup_url", "logo_url", "description", "network", "categories", "commission", "commission_type",
   "pct_min", "pct_max", "flat_min", "flat_max", "recurring", "lifetime", "cookie_days", "cookie_length_raw", "source_updated", "established_year", "tags",
-  "countries", "currency", "min_payout", "hold_days", "payment_methods", "payment_frequency", "contact_email", "socials", "affiliate_managers", "phone", "telegram", "skype", "rating_avg", "rating_count", "offers_count", "vertical"];
+  "countries", "currency", "min_payout", "hold_days", "payment_methods", "payment_frequency", "contact_email", "socials", "affiliate_managers", "phone", "telegram", "skype", "rating_avg", "rating_count", "offers_count", "vertical",
+  ...CANON_COLS];
 
 async function upsert(db, row, slug, url, fetchedAt) {
   for (const col of ["signup_url", "landing_url"]) if (row[col]) { const c = cleanUrl(row[col]); if (c.changed) row[col] = c.url; }
@@ -41,6 +44,10 @@ async function upsert(db, row, slug, url, fetchedAt) {
   const name = row.program_name; if (!name) throw new Error("no program_name");
   const fullSlug = `${SITE}-${slug}`.toLowerCase().slice(0, 120);
   const extra = { ...(row.extra || {}), provenance: { site: SITE, url, fetched_at: fetchedAt } };
+  // Canonical English values for everything a reader filters by, written alongside the raw fields and
+  // never over them (canon.js). Without this a reader filtering "Wire transfer" misses every programme
+  // whose source wrote "банковский перевод".
+  Object.assign(row, canonRow(row));
   // a parser that computed NaN has no value, not a broken one — never let it reach Postgres
   const vals = COLS.map((c) => c === "tags" ? (row.tags || []) : (row[c] === undefined || (typeof row[c] === "number" && !Number.isFinite(row[c])) ? null : row[c]));
   const sets = COLS.map((c, i) => `${c} = $${i + 6}`).join(", ");
