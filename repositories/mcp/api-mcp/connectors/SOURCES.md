@@ -130,7 +130,7 @@ guesses. Each row says what it gives that the others cannot.
 | `clarity` | frustration signals no counter has: dead clicks, rage clicks, quick-backs, script errors, per URL | **verified live**, 16 metrics returned. All zero so far, which is consistent with ~24 sessions/28 days plus the consent gate and bot filtering — not a misconfiguration |
 | `yandex-webmaster` | RU/BY/KZ/TR search, which is invisible to Google Search Console, plus a recrawl queue | connector ready, **needs an OAuth token stored as `OAuth <token>`** and a verified host |
 | `indexnow` | one call reaching Bing, Yandex, Seznam and Naver — no per-engine account | **verified live**, 200 responses; the site's own cron batches up to 9,000/run |
-| `cloudflare-analytics` | **requests per user agent at the edge — the only way to see whether AI crawlers are actually reading the site.** No answer engine publishes a webmaster console or a citation API, so crawl volume is the measurement | connector ready, **needs a token with Zone → Analytics → Read**; both existing Cloudflare tokens were refused (`does not have permission com.cloudflare.api.account.zone.analytics.read`, 31.08.2026) |
+| `cloudflare-analytics` | **requests per user agent at the edge — the only way to see whether AI crawlers are actually reading the site.** No answer engine publishes a webmaster console or a citation API, so crawl volume is the measurement | **verified live 31.08.2026**. Needed a token carrying the `Analytics Read` group — the account's general-purpose tokens do not have it, so a least-privilege one scoped to the single zone was minted. First reading: 482 AI-crawler requests in 24 h (GPTBot 373, OAI-SearchBot 72, ChatGPT-User 27, ClaudeBot 2, Perplexity 2) |
 | `crux` | real-Chrome Core Web Vitals for the origin — the ranking-relevant speed number, not a lab score | already present, uses `google_api_key` |
 | `openpagerank` / `tranco` | how contested the niche is and how strong incumbents are | already present |
 | `dataforseo` | exact Google Ads volume/CPC per keyword | already present, **pay-as-you-go — against `BR-OPS-1`, use only deliberately** |
@@ -171,3 +171,12 @@ guesses. Each row says what it gives that the others cannot.
 JSON array (`urls=["a","b"]`) yields `['["a"', '"b"]']` and the API rejects it — Bing echoed the
 bracket-and-quote string straight back as `Invalid Urls`. Pass comma-separated values. The same
 trap made a generic `ga4.report` endpoint unusable; it was replaced with a fixed `ga4.hosts`.
+
+### Cloudflare GraphQL analytics, two things that waste an hour
+
+- **The free plan refuses a window wider than 1 day** on `httpRequestsAdaptiveGroups`
+  (`cannot request a time range wider than 1d`), and there is no retrospective history. Pull daily
+  and store — `scripts/ai-crawlers.mjs --json` exists for exactly that.
+- **GraphQL answers HTTP 200 even when it refuses.** The reason arrives in an `errors` array beside
+  a null `data`, so a permission or quota failure looks identical to "nobody visited". Both
+  endpoints now project `errors` into `meta`, and `ai-crawlers.mjs` exits non-zero on it.

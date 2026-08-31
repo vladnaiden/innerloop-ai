@@ -9,12 +9,13 @@ auth:
   type: bearer
   token: $secret:cloudflare_analytics_token
 setup:
-  - "The existing cloudflare tokens do NOT work here: both were refused with 'does not have permission com.cloudflare.api.account.zone.analytics.read' (measured 31.08.2026)."
-  - "Cloudflare dashboard → My Profile → API Tokens → edit the existing token (or create one) and add the permission **Zone → Analytics → Read** for the zone."
+  - "Needs the permission group **Analytics Read** (`9c88f9c5bce24ce7af9a958ba9c504db`, scope `com.cloudflare.api.account.zone`). The account's general-purpose tokens do not carry it — both were refused with `does not have permission com.cloudflare.api.account.zone.analytics.read`."
+  - "A least-privilege token holding only that group, scoped to the one zone, is enough — and is what is stored (created 31.08.2026 as 'api-mcp analytics read (affiliate-registry)'). Do not point this connector at an account-wide write token."
   - "Run: api secrets set cloudflare_analytics_token <token>"
 
 notes:
-  - "Free-plan retention on httpRequestsAdaptiveGroups is short (about 3 days). Pull daily and store, or the history simply is not there to ask for."
+  - "**The free plan refuses a window wider than 1 day** on httpRequestsAdaptiveGroups — `cannot request a time range wider than 1d`. Pull daily and store; the history is not there to ask for retrospectively."
+  - "GraphQL answers **HTTP 200 even when it refuses**, putting the reason in an `errors` array beside a null `data`. Both endpoints project `errors` into `meta` so a refusal is visible instead of arriving as an empty result — that ambiguity cost a diagnosis on 31.08.2026."
   - "`userAgent` is the raw header, so counting AI crawlers means matching substrings — a bot that changes its UA string disappears from the count rather than erroring."
 
 endpoints:
@@ -31,11 +32,13 @@ endpoints:
         limit: "{{limit}}"
     params:
       zone: { description: "Cloudflare zone id.", required: true, in: body, example: "81cdc7057b82f603c0396b62fb767cb3" }
-      from: { description: "ISO8601 start, e.g. 2026-08-28T00:00:00Z", required: true, in: body, example: "2026-08-28T00:00:00Z" }
+      from: { description: "ISO8601 start. Must be within 1 day of `to` on the free plan.", required: true, in: body, example: "2026-08-30T00:00:00Z" }
       to: { description: "ISO8601 end.", required: true, in: body, example: "2026-08-31T00:00:00Z" }
       limit: { description: "Rows to return.", type: number, default: 100, in: body }
     result:
       items: $.data.viewer.zones[0].httpRequestsAdaptiveGroups
+      meta:
+        errors: $.errors
       fields:
         user_agent: $.dimensions.userAgent
         requests: $.count
@@ -60,6 +63,8 @@ endpoints:
       limit: { description: "Rows to return.", type: number, default: 100, in: body }
     result:
       items: $.data.viewer.zones[0].httpRequestsAdaptiveGroups
+      meta:
+        errors: $.errors
       fields:
         host: $.dimensions.clientRequestHTTPHost
         path: $.dimensions.clientRequestPath
