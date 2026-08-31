@@ -1,0 +1,36 @@
+name: indexnow
+description: "IndexNow — tell Bing, Yandex, Seznam and Naver that a URL changed, instead of waiting for the next crawl. One shared endpoint, no per-engine account, no quota worth worrying about. The only instant-submission channel open to a site without special content types."
+base: https://api.indexnow.org
+docs: https://www.indexnow.org/documentation
+free: "free, no account; the practical cap is 10,000 URLs per POST"
+rate_limit: "600/min"
+cache: "0"
+auth:
+  type: query
+  name: key
+  value: $secret:indexnow_key
+setup:
+  - "Pick any 8-128 character hex key (`openssl rand -hex 16`)."
+  - "Serve it as plain text at https://<your-host>/<key>.txt — the body must be exactly the key. affiliate-registry.com does this from the INDEXNOW_KEY env var via a rewrite in next.config.ts."
+  - "Run: api secrets set indexnow_key <key>"
+
+notes:
+  - "Google does NOT participate. Google retired its sitemap ping in 2023 and its Indexing API accepts only JobPosting and BroadcastEvent, so for Google the submitted sitemap remains the only channel — see search-console.submit_sitemap."
+  - "202 means accepted-but-key-not-yet-validated; 200 means the key file was found and the URL is queued. A 403 means the key file does not match."
+  - "This endpoint is the single-URL form, for `reindex this page now`. Bulk submission runs on the site's own cron (`/api/cron/sitemap` → lib/indexnow.ts), which batches up to 9,000 URLs per run against a persisted watermark."
+
+endpoints:
+  submit:
+    description: "Submit one changed URL to every IndexNow-participating engine at once."
+    path: /indexnow
+    params:
+      url:
+        description: "The absolute URL that changed. Must be on the host the key file is served from."
+        required: true
+        example: https://example.com/page
+    accept_status: [200, 202]
+    result:
+      fields:
+        submitted: $.url
+    example: 'call_api(api: "indexnow", endpoint: "submit", params: {url: "https://affiliate-registry.com/affiliate-program/kraken"})'
+    notes: "The response body is empty; the status code is the whole answer. 200 = accepted, 202 = accepted pending key validation."

@@ -1,0 +1,103 @@
+name: yandex-webmaster
+description: "Yandex Webmaster API — search performance, indexing state and a recrawl queue for a verified host. Yandex is the dominant engine in RU/BY/KZ and a real share in TR, which matters for a registry with Russian, Turkish and Kazakh-facing programmes; none of that traffic shows up in Search Console."
+base: https://api.webmaster.yandex.net/v4
+docs: https://yandex.ru/dev/webmaster/doc/dg/concepts/about.html
+free: "free with a Yandex account and a verified host"
+rate_limit: "30/min"
+cache: "6h"
+auth:
+  type: header
+  name: Authorization
+  # Yandex rejects `Bearer`: the header value must literally be `OAuth <token>`, and secrets are
+  # substituted whole (no interpolation), so the stored secret carries the scheme with it.
+  value: $secret:yandex_webmaster_auth
+setup:
+  - "Register an app at https://oauth.yandex.com/client/new with the permission `webmaster:hostinfo` and `webmaster:verify`."
+  - "Get a token for it (implicit flow is enough for a one-off: https://oauth.yandex.com/authorize?response_type=token&client_id=<id>)."
+  - "Add and verify the host at https://webmaster.yandex.com/ (DNS TXT is easiest)."
+  - "Store the token WITH its scheme: api secrets set yandex_webmaster_auth 'OAuth <token>'"
+
+notes:
+  - "Every path needs `user_id` (from the `whoami` endpoint) and `host_id`, which is a mangled form of the origin like `https:affiliate-registry.com:443` — take it from the `hosts` endpoint, never build it by hand."
+  - "The recrawl queue is a small daily allowance (typically tens of URLs); it is for pages that changed, not for bulk submission. IndexNow reaches Yandex too and has no such cap."
+
+endpoints:
+  whoami:
+    description: "Your Yandex user id — every other endpoint needs it."
+    path: /user/
+    result:
+      fields:
+        user_id: $.user_id
+    example: 'call_api(api: "yandex-webmaster", endpoint: "whoami")'
+
+  hosts:
+    description: "Hosts verified on this account, with their host_id and verification state."
+    path: /user/{{user_id}}/hosts
+    params:
+      user_id: { description: "From `whoami`.", required: true, example: "123456" }
+    result:
+      items: $.hosts
+      fields:
+        host_id: $.host_id
+        url: $.unicode_host_url
+        verified: $.verified
+        main_mirror: $.main_mirror.host_id
+    example: 'call_api(api: "yandex-webmaster", endpoint: "hosts", params: {user_id: "123456"})'
+
+  queries:
+    description: "Top search queries for a host: shows, clicks, CTR and average position — the Yandex equivalent of Search Console performance."
+    path: /user/{{user_id}}/hosts/{{host_id}}/search-queries/popular
+    query:
+      order_by: TOTAL_SHOWS
+      query_indicator: TOTAL_SHOWS
+    params:
+      user_id: { description: "From `whoami`.", required: true, example: "123456" }
+      host_id: { description: "From `hosts`, e.g. https:example.com:443", required: true, example: "https:example.com:443" }
+    result:
+      items: $.queries
+      fields:
+        query: $.query_text
+        shows: $.indicators.TOTAL_SHOWS
+        clicks: $.indicators.TOTAL_CLICKS
+    example: 'call_api(api: "yandex-webmaster", endpoint: "queries", params: {user_id: "123456", host_id: "https:affiliate-registry.com:443"})'
+
+  indexing:
+    description: "How many pages Yandex has crawled and how many are in the search index, over time — the single best read on whether 92k pages are actually landing."
+    path: /user/{{user_id}}/hosts/{{host_id}}/search-urls/in-search/history
+    params:
+      user_id: { description: "From `whoami`.", required: true, example: "123456" }
+      host_id: { description: "From `hosts`.", required: true, example: "https:example.com:443" }
+    result:
+      items: $.history
+      fields:
+        date: $.date
+        in_search: $.value
+    example: 'call_api(api: "yandex-webmaster", endpoint: "indexing", params: {user_id: "123456", host_id: "https:affiliate-registry.com:443"})'
+
+  recrawl_quota:
+    description: "How many recrawl requests are left today. Check before submitting — the allowance is small."
+    path: /user/{{user_id}}/hosts/{{host_id}}/recrawl/quota
+    params:
+      user_id: { description: "From `whoami`.", required: true, example: "123456" }
+      host_id: { description: "From `hosts`.", required: true, example: "https:example.com:443" }
+    result:
+      fields:
+        daily_quota: $.daily_quota
+        quota_remainder: $.quota_remainder
+    example: 'call_api(api: "yandex-webmaster", endpoint: "recrawl_quota", params: {user_id: "123456", host_id: "https:affiliate-registry.com:443"})'
+
+  recrawl:
+    description: "Ask Yandex to re-crawl one URL now. Spend the small daily quota on pages that actually changed."
+    path: /user/{{user_id}}/hosts/{{host_id}}/recrawl/queue
+    method: POST
+    body:
+      url: "{{url}}"
+    params:
+      user_id: { description: "From `whoami`.", required: true, example: "123456" }
+      host_id: { description: "From `hosts`.", required: true, example: "https:example.com:443" }
+      url: { description: "Absolute URL on that host.", required: true, in: body, example: "https://example.com/page" }
+    result:
+      fields:
+        task_id: $.task_id
+    example: 'call_api(api: "yandex-webmaster", endpoint: "recrawl", params: {user_id: "123456", host_id: "https:affiliate-registry.com:443", url: "https://affiliate-registry.com/"})'
+    notes: "Returns a task_id. Over quota it returns an error, not a truncated success — call `recrawl_quota` first."

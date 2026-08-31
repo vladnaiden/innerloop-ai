@@ -1,0 +1,122 @@
+name: bing-webmaster
+description: "Bing Webmaster Tools API — real absolute keyword impression volume, with no ad spend required. The closest free thing to a keyword planner."
+base: https://ssl.bing.com/webmaster/api.svc/json
+docs: https://learn.microsoft.com/en-us/bingwebmaster/getting-access
+free: "free with a Bing Webmaster Tools account and one verified site"
+rate_limit: "30/min"
+cache: "24h"
+auth:
+  type: query
+  name: apikey
+  value: $secret:bing_api_key
+setup:
+  - Sign in at https://www.bing.com/webmasters and add a site you control
+  - Verify the site (DNS record, HTML file, or meta tag) — the API key is only issued once a site is verified
+  - Open Settings → API Access → API Key and generate one
+  - "Run: api secrets set bing_api_key <key>"
+
+endpoints:
+  keyword_stats:
+    description: Historical impression volume for a keyword — absolute monthly numbers from Bing's own search logs.
+    path: /GetKeywordStats
+    params:
+      q:
+        description: The keyword or phrase.
+        required: true
+        example: project management software
+      country:
+        description: Two-letter country code, lowercase.
+        default: us
+      language:
+        description: 'Language-country code, e.g. en-US, uk-UA, pl-PL.'
+        default: en-US
+    result:
+      items: $.d
+      fields:
+        query: $.Query
+        impressions: $.Impressions
+        broad_impressions: $.BroadImpressions
+        date: $.Date
+    example: 'call_api(api: "bing-webmaster", endpoint: "keyword_stats", params: {q: "crm for freelancers", country: "gb", language: "en-GB"})'
+    notes: "Returns one row per month, newest first. `impressions` is the exact phrase; `broad_impressions` counts the wider match set and is usually the more useful number - for \"робота\" in Ukraine, 3,432 exact against 37,483 broad. Two caveats measured on a live key: the series LAGS by several months (in August 2026 the newest row was February 2026), so this is a trend and sizing tool rather than a live one; and Bing carries roughly a tenth of Google's search share in most markets, so treat the absolute figures as a proportional signal. Long-tail phrases often return no rows at all."
+
+  sites:
+    description: "The sites verified in your Bing Webmaster account. query_stats only works for these - check here first."
+    path: /GetUserSites
+    result:
+      items: $.d
+      fields:
+        url: $.Url
+        verified: $.IsVerified
+        dns_code: $.DnsVerificationCode
+    example: 'call_api(api: "bing-webmaster", endpoint: "sites")'
+
+  query_stats:
+    description: Real impressions, clicks and average position for YOUR verified site — the same data Search Console gives, from Bing.
+    path: /GetQueryStats
+    params:
+      siteUrl:
+        description: "A site verified in YOUR Bing Webmaster account - run the `sites` endpoint to list them. Any other site returns NotAuthorized."
+        required: true
+        example: https://example.com
+    result:
+      items: $.d
+      fields:
+        query: $.Query
+        impressions: $.Impressions
+        clicks: $.Clicks
+        avg_position: $.AvgImpressionPosition
+        date: $.Date
+    example: 'call_api(api: "bing-webmaster", endpoint: "query_stats", params: {siteUrl: "https://example.com"})'
+    notes: "An empty result with no error means the site is verified but Bing has recorded no impressions for it yet - normal for a new or low-traffic site. Check `sites` first if you get NotAuthorized instead."
+
+  rank_and_traffic:
+    description: "Site-level clicks and impressions per day for a verified site. Records pass through unprojected, so whatever Bing returns is visible."
+    path: /GetRankAndTrafficStats
+    params:
+      siteUrl:
+        description: "A site verified in YOUR Bing Webmaster account."
+        required: true
+        example: https://example.com
+    result:
+      items: $.d
+    example: 'call_api(api: "bing-webmaster", endpoint: "rank_and_traffic", params: {siteUrl: "https://example.com"})'
+    notes: "Deliberately has no field projection: this endpoint returned an empty list on the only account available to test it, so naming fields would be guesswork. Once it returns data, add a projection for the fields you care about."
+
+
+  url_quota:
+    description: "How many URLs you may still submit for indexing today, and in total, for a verified site."
+    path: /GetUrlSubmissionQuota
+    params:
+      siteUrl:
+        description: "A site verified in YOUR Bing Webmaster account (see `sites`)."
+        required: true
+        example: https://example.com
+    result:
+      fields:
+        daily_quota: $.d.DailyQuota
+        monthly_quota: $.d.MonthlyQuota
+    example: 'call_api(api: "bing-webmaster", endpoint: "url_quota", params: {siteUrl: "https://example.com"})'
+    notes: "Check this before a batch: a submission over quota is rejected whole, not truncated. A newly verified site starts with a small daily allowance that grows as Bing builds trust in the property."
+
+  submit_urls:
+    description: "Ask Bing to crawl specific URLs now, instead of waiting for it to re-read the sitemap."
+    path: /SubmitUrlBatch
+    method: POST
+    body:
+      siteUrl: "{{siteUrl}}"
+      urlList: "{{urls}}"
+    params:
+      siteUrl:
+        description: "A site verified in YOUR Bing Webmaster account (see `sites`)."
+        required: true
+        in: body
+        example: https://example.com
+      urls:
+        description: "Absolute URLs on that site, as a JSON array. Must all be on siteUrl's host."
+        required: true
+        list: true
+        in: body
+        example: '["https://example.com/a","https://example.com/b"]'
+    example: 'call_api(api: "bing-webmaster", endpoint: "submit_urls", params: {siteUrl: "https://example.com", urls: ["https://example.com/page"]})'
+    notes: "This is the direct-submission channel; IndexNow reaches the same index without a per-site key and is the better default for volume. Use this when you want the submission attributed to the Webmaster account, or to spend the daily quota deliberately on a handful of high-value pages. Check `url_quota` first."

@@ -1,0 +1,129 @@
+name: ga4
+description: "Google Analytics 4 Data API — the site's own traffic: sessions, users, engagement and conversions by landing page, source/medium, country and device. The demand-side half of the SEO picture (Search Console shows what people searched; this shows what they did next)."
+base: https://analyticsdata.googleapis.com/v1beta
+docs: https://developers.google.com/analytics/devguides/reporting/data/v1
+free: "free; 25,000 tokens/day per property, ~1,250 core requests/day"
+rate_limit: "60/min, 1250/day"
+cache: "1h"
+auth:
+  type: service_account
+  key: $secret:gcp_service_account_json
+  scope: https://www.googleapis.com/auth/analytics.readonly
+setup:
+  - APIs & Services → Library → enable "Google Analytics Data API" in the same project as the BigQuery/Search Console service account
+  - "GA4 → Admin → Property access management → Add the service-account email with the Viewer role"
+  - "Admin → Property details → copy the numeric Property ID (NOT the G-XXXX measurement id — that one is for the tag only)"
+  - Same service-account JSON as bigquery and search-console; no extra secret
+
+notes:
+  - "The `property` param is the numeric id (e.g. 501234567). Passing a G-XXXX measurement id returns 400 INVALID_ARGUMENT — they are different identifiers for the same property."
+  - "GA4 thresholds and withholds rows for small audiences, so a low-traffic day can legitimately return fewer rows than Search Console reports impressions for."
+
+endpoints:
+  landing_pages:
+    description: "Sessions and engagement per landing page — which pages actually bring people in, ranked."
+    path: /properties/{{property}}:runReport
+    method: POST
+    body:
+      dateRanges:
+        - startDate: "{{start}}"
+          endDate: "{{end}}"
+      dimensions:
+        - name: landingPagePlusQueryString
+      metrics:
+        - name: sessions
+        - name: activeUsers
+        - name: engagementRate
+        - name: averageSessionDuration
+      orderBys:
+        - metric: { metricName: sessions }
+          desc: true
+      limit: "{{limit}}"
+    params:
+      property:
+        description: "Numeric GA4 property id (Admin → Property details)."
+        required: true
+        example: "501234567"
+      start:
+        description: "Start date, YYYY-MM-DD or a relative token like 28daysAgo."
+        default: 28daysAgo
+      end:
+        description: "End date, YYYY-MM-DD or `today`/`yesterday`."
+        default: yesterday
+      limit:
+        description: Rows to return.
+        type: number
+        default: 100
+    result:
+      items: $.rows
+      fields:
+        page: $.dimensionValues[0].value
+        sessions: $.metricValues[0].value
+        users: $.metricValues[1].value
+        engagement_rate: $.metricValues[2].value
+        avg_duration_s: $.metricValues[3].value
+    example: 'call_api(api: "ga4", endpoint: "landing_pages", params: {property: "501234567", start: "28daysAgo"})'
+
+  acquisition:
+    description: "Where the sessions came from — source/medium with sessions and engaged sessions. Tells organic search apart from referral and direct."
+    path: /properties/{{property}}:runReport
+    method: POST
+    body:
+      dateRanges:
+        - startDate: "{{start}}"
+          endDate: "{{end}}"
+      dimensions:
+        - name: sessionSourceMedium
+      metrics:
+        - name: sessions
+        - name: engagedSessions
+        - name: activeUsers
+      orderBys:
+        - metric: { metricName: sessions }
+          desc: true
+      limit: "{{limit}}"
+    params:
+      property: { description: "Numeric GA4 property id.", required: true, example: "501234567" }
+      start: { description: "Start date or relative token.", default: 28daysAgo }
+      end: { description: "End date or relative token.", default: yesterday }
+      limit: { description: Rows to return., type: number, default: 50 }
+    result:
+      items: $.rows
+      fields:
+        source_medium: $.dimensionValues[0].value
+        sessions: $.metricValues[0].value
+        engaged_sessions: $.metricValues[1].value
+        users: $.metricValues[2].value
+    example: 'call_api(api: "ga4", endpoint: "acquisition", params: {property: "501234567"})'
+
+  countries:
+    description: "Sessions by country — which of the 19 locales are actually earning their keep."
+    path: /properties/{{property}}:runReport
+    method: POST
+    body:
+      dateRanges:
+        - startDate: "{{start}}"
+          endDate: "{{end}}"
+      dimensions:
+        - name: country
+        - name: language
+      metrics:
+        - name: sessions
+        - name: activeUsers
+      orderBys:
+        - metric: { metricName: sessions }
+          desc: true
+      limit: "{{limit}}"
+    params:
+      property: { description: "Numeric GA4 property id.", required: true, example: "501234567" }
+      start: { description: "Start date or relative token.", default: 28daysAgo }
+      end: { description: "End date or relative token.", default: yesterday }
+      limit: { description: Rows to return., type: number, default: 100 }
+    result:
+      items: $.rows
+      fields:
+        country: $.dimensionValues[0].value
+        language: $.dimensionValues[1].value
+        sessions: $.metricValues[0].value
+        users: $.metricValues[1].value
+    example: 'call_api(api: "ga4", endpoint: "countries", params: {property: "501234567"})'
