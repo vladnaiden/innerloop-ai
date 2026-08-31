@@ -54,7 +54,10 @@ const wants = (c) => ONLY.length === 0 || ONLY.includes(c);
 /** Call a connector through the CLI. Returns {ok, data|error} — never throws, so one dead channel
  *  cannot take the run down with it. */
 async function call(api, endpoint, params = {}) {
-  const argv = [CLI, 'call', `${api}.${endpoint}`, ...Object.entries(params).map(([k, v]) => `${k}=${Array.isArray(v) ? JSON.stringify(v) : v}`), '--json'];
+  // A `list: true` connector param is split on COMMAS by the engine, not parsed as JSON — passing
+  // `["a","b"]` yields ['["a"', '"b"]'] and the API rejects it as malformed. Measured 31.08.2026
+  // against Bing's SubmitUrlBatch, which echoed the bracket-and-quote string back as "Invalid Urls".
+  const argv = [CLI, 'call', `${api}.${endpoint}`, ...Object.entries(params).map(([k, v]) => `${k}=${Array.isArray(v) ? v.join(',') : v}`), '--json'];
   try {
     const { stdout } = await run('node', argv, { maxBuffer: 32 * 1024 * 1024 });
     const json = JSON.parse(stdout);

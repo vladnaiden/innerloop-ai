@@ -125,7 +125,7 @@ guesses. Each row says what it gives that the others cannot.
 | connector | what only it gives | state 31.08.2026 |
 |---|---|---|
 | `search-console` | Google queries/pages/countries, index coverage per URL (`inspect`), sitemap status, sitemap resubmission | **verified live** — `sc-domain:affiliate-registry.com`, siteOwner. Real rows returned ("shopz affiliate" pos 1.29). Sitemap index submitted 31.08.2026, downloaded by Google in 1 s, 0 errors |
-| `bing-webmaster` | Bing/DuckDuckGo/ChatGPT-search side, **absolute keyword impression volume** with no ad spend, and direct URL submission (`submit_urls`, `url_quota`) | key works; `url_quota` returns 100/day. **Still blocked 31.08.2026**: `GetUserSites` returns only `text-to-speech.xyz`, so affiliate-registry.com was added under a *different Bing account* than the one this API key belongs to — add it in the same account, or issue a key from the account that has it |
+| `bing-webmaster` | Bing/DuckDuckGo/ChatGPT-search side, **absolute keyword impression volume** with no ad spend, and direct URL submission (`submit_urls`, `url_quota`) | **verified live 31.08.2026**: added via `add_site`, proved via DNS CNAME + `BingSiteAuth.xml` + `msvalidate.01`, verified with `verify_site`, 24 URLs submitted against a 100/day quota |
 | `ga4` | what visitors did after they arrived: landing pages, source/medium, country/language — the demand side Search Console cannot see | **verified live** on property `551309693`. The property is **shared by 9 hostnames** (blog, old subdomain, 5 preview deploys, localhost), so every report is filtered by a `host` param defaulting to affiliate-registry.com; the `hosts` endpoint exists to reveal the blend |
 | `clarity` | frustration signals no counter has: dead clicks, rage clicks, quick-backs, script errors, per URL | **verified live**, 16 metrics returned. All zero so far, which is consistent with ~24 sessions/28 days plus the consent gate and bot filtering — not a misconfiguration |
 | `yandex-webmaster` | RU/BY/KZ/TR search, which is invisible to Google Search Console, plus a recrawl queue | connector ready, **needs an OAuth token stored as `OAuth <token>`** and a verified host |
@@ -150,3 +150,23 @@ guesses. Each row says what it gives that the others cannot.
   Not worth it for a `zh` locale that is UI-only.
 - **DuckDuckGo / ChatGPT search** — no submission or analytics API of their own; both draw on
   Bing's index, so `bing-webmaster` + IndexNow is the whole lever.
+
+### Two traps in this API, both measured 31.08.2026
+
+1. **`AuthenticationCode` and `DnsVerificationCode` are different codes.** `AuthenticationCode` is
+   **account-level** — identical across every site on the account — and is what goes in the
+   `msvalidate.01` meta tag and in `BingSiteAuth.xml`. `DnsVerificationCode` is **per site** and is
+   the left label of a CNAME pointing at `verify.bing.com`. Using one where the other belongs fails
+   silently: `VerifySite` just returns `false` with no explanation. The `sites` endpoint now
+   projects both.
+
+2. **`sites` was cached for 24 h**, which is the connector default and exactly wrong for the one
+   endpoint you poll while verifying — it reported the site as absent long after `add_site`
+   succeeded, which read as "the key belongs to another account". Now cached for 5 minutes.
+
+### Engine note: `list: true` splits on commas, not JSON
+
+`src/engine/request.ts` turns a `list: true` string into an array with `.split(',')`. Passing a
+JSON array (`urls=["a","b"]`) yields `['["a"', '"b"]']` and the API rejects it — Bing echoed the
+bracket-and-quote string straight back as `Invalid Urls`. Pass comma-separated values. The same
+trap made a generic `ga4.report` endpoint unusable; it was replaced with a fixed `ga4.hosts`.

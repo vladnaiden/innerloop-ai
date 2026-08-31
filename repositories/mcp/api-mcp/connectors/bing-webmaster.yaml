@@ -41,13 +41,19 @@ endpoints:
     notes: "Returns one row per month, newest first. `impressions` is the exact phrase; `broad_impressions` counts the wider match set and is usually the more useful number - for \"робота\" in Ukraine, 3,432 exact against 37,483 broad. Two caveats measured on a live key: the series LAGS by several months (in August 2026 the newest row was February 2026), so this is a trend and sizing tool rather than a live one; and Bing carries roughly a tenth of Google's search share in most markets, so treat the absolute figures as a proportional signal. Long-tail phrases often return no rows at all."
 
   sites:
-    description: "The sites verified in your Bing Webmaster account. query_stats only works for these - check here first."
+    description: "Every site on your Bing Webmaster account, verified or not, with both ownership codes. query_stats and submit_urls only work for verified ones - check here first."
+    # 5 minutes, not the connector default: this is the endpoint you poll while verifying a site,
+    # and a day-long cache reports a site as missing long after it has been added (measured 31.08.2026).
+    cache: "5m"
     path: /GetUserSites
     result:
       items: $.d
       fields:
         url: $.Url
         verified: $.IsVerified
+        # account-level, identical for every site: goes in the msvalidate.01 meta tag and in BingSiteAuth.xml
+        auth_code: $.AuthenticationCode
+        # PER SITE, and different from auth_code: the left label of a CNAME pointing at verify.bing.com
         dns_code: $.DnsVerificationCode
     example: 'call_api(api: "bing-webmaster", endpoint: "sites")'
 
@@ -113,10 +119,41 @@ endpoints:
         in: body
         example: https://example.com
       urls:
-        description: "Absolute URLs on that site, as a JSON array. Must all be on siteUrl's host."
+        description: "Absolute URLs on that site, comma-separated. Must all be on siteUrl's host."
         required: true
         list: true
         in: body
-        example: '["https://example.com/a","https://example.com/b"]'
+        example: https://example.com/a,https://example.com/b
     example: 'call_api(api: "bing-webmaster", endpoint: "submit_urls", params: {siteUrl: "https://example.com", urls: ["https://example.com/page"]})'
     notes: "This is the direct-submission channel; IndexNow reaches the same index without a per-site key and is the better default for volume. Use this when you want the submission attributed to the Webmaster account, or to spend the daily quota deliberately on a handful of high-value pages. Check `url_quota` first."
+
+  add_site:
+    description: "Add a site to the Bing Webmaster account that owns this API key. The site still has to be verified afterwards — see `sites` for the verification codes it hands back."
+    path: /AddSite
+    method: POST
+    cache: "0"
+    body:
+      siteUrl: "{{siteUrl}}"
+    params:
+      siteUrl:
+        description: "Absolute origin, with scheme and trailing slash, e.g. https://example.com/"
+        required: true
+        in: body
+        example: https://example.com/
+    example: 'call_api(api: "bing-webmaster", endpoint: "add_site", params: {siteUrl: "https://example.com/"})'
+    notes: "A site may be verified by several Bing accounts at once, so adding it here does not disturb anyone else's copy. If it is already on this account the API returns an error naming that — which is a success for our purposes."
+
+  verify_site:
+    description: "Ask Bing to re-check the verification proof for a site (DNS record, XML file or meta tag) that has already been added."
+    path: /VerifySite
+    method: POST
+    cache: "0"
+    body:
+      siteUrl: "{{siteUrl}}"
+    params:
+      siteUrl:
+        description: "Absolute origin, as passed to `add_site`."
+        required: true
+        in: body
+        example: https://example.com/
+    example: 'call_api(api: "bing-webmaster", endpoint: "verify_site", params: {siteUrl: "https://example.com/"})'
