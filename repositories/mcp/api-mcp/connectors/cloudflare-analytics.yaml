@@ -7,11 +7,11 @@ rate_limit: "300/min"
 cache: "1h"
 auth:
   type: bearer
-  token: $secret:cloudflare_analytics_token
+  token: $secret:cloudflare_site_token
 setup:
   - "Needs the permission group **Analytics Read** (`9c88f9c5bce24ce7af9a958ba9c504db`, scope `com.cloudflare.api.account.zone`). The account's general-purpose tokens do not carry it — both were refused with `does not have permission com.cloudflare.api.account.zone.analytics.read`."
-  - "A least-privilege token holding only that group, scoped to the one zone, is enough — and is what is stored (created 31.08.2026 as 'api-mcp analytics read (affiliate-registry)'). Do not point this connector at an account-wide write token."
-  - "Run: api secrets set cloudflare_analytics_token <token>"
+  - "Uses `cloudflare_site_token` — the zone-scoped token for affiliate-registry.com (Zone Read, Zone Settings Read, DNS Write, Zone WAF Write, Analytics Read). **Never point this at the account-wide token**: reading traffic counts does not need write access to billing, Workers or other people's zones."
+  - "Run: api secrets set cloudflare_site_token <token>"
 
 notes:
   - "**The free plan refuses a window wider than 1 day** on httpRequestsAdaptiveGroups — `cannot request a time range wider than 1d`. Pull daily and store; the history is not there to ask for retrospectively."

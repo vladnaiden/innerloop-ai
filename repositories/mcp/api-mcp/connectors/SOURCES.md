@@ -180,3 +180,16 @@ trap made a generic `ga4.report` endpoint unusable; it was replaced with a fixed
 - **GraphQL answers HTTP 200 even when it refuses.** The reason arrives in an `errors` array beside
   a null `data`, so a permission or quota failure looks identical to "nobody visited". Both
   endpoints now project `errors` into `meta`, and `ai-crawlers.mjs` exits non-zero on it.
+
+### Cloudflare token split (31.08.2026)
+
+Two tokens, and the difference matters:
+
+| Secret / env | Token | Scope | Use for |
+|---|---|---|---|
+| `cloudflare_site_token` / `CLOUDFLARE_SITE_TOKEN` | *affiliate-registry.com site token (api-mcp)* | **one zone**, 5 permissions: Zone Read, Zone Settings Read, DNS Write, Zone WAF Write, Analytics Read | everything touching the website — DNS verification records, crawler WAF rules, AI-crawler analytics |
+| `CLOUDFLARE_ACCOUNT_TOKEN` | *sparkling-king-1512* | **account-wide**, 166 permissions incl. Billing Write and Account API Tokens Write | global/account changes only |
+
+Verified on creation: the site token reads its own zone, DNS, WAF rules and analytics, and is
+**denied** the other zone, account settings, the token list and Workers. Prefer it by default; reach
+for the account token only when the job genuinely is account-wide.
