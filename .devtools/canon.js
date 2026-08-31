@@ -1,4 +1,5 @@
 "use strict";
+const { classify, CATEGORIES } = require("./taxonomy.js");
 /**
  * Canonical filter values — the translation layer for everything a reader can filter by.
  *
@@ -172,10 +173,23 @@ function methods(list) {
   return out.length ? out : null;
 }
 
-/** The canonical columns for one scraped row. Never touches the raw fields. */
+/**
+ * The canonical columns for one scraped row. Never touches the raw fields.
+ *
+ * Verticals go through the closed taxonomy in ./taxonomy.js rather than the open VERTICAL dictionary:
+ * that dictionary translated a label but left 932 distinct "canonical" verticals, which is not a
+ * browsable filter. `vertical_en` is now one of 22 Categories and `subvertical_en` the finer label.
+ *
+ * `vertical_original` is a verbatim copy of what the source published. `vertical` already holds it and
+ * is not rewritten, but the explicit copy is what guarantees the source's own words survive any later
+ * change to how `vertical` is populated — the generalisation must never be able to destroy the input.
+ */
 function canonRow(row) {
+  const v = classify(row.vertical);
   return {
-    vertical_en: one("vertical", row.vertical),
+    vertical_original: row.vertical == null || String(row.vertical).trim() === "" ? null : String(row.vertical).trim(),
+    vertical_en: v.category,
+    subvertical_en: v.sub,
     payment_frequency_en: frequency(row.payment_frequency),
     payment_methods_en: methods(row.payment_methods),
     rate_type_en: one("rateType", row.rate_type),
@@ -183,4 +197,6 @@ function canonRow(row) {
 }
 
 module.exports = { VERTICAL, FREQUENCY, METHOD, RATE_TYPE, canonRow, one, frequency, methods,
-  CANON_COLS: ["vertical_en", "payment_frequency_en", "payment_methods_en", "rate_type_en"] };
+  CATEGORIES, classify,
+  CANON_COLS: ["vertical_original", "vertical_en", "subvertical_en",
+               "payment_frequency_en", "payment_methods_en", "rate_type_en"] };
