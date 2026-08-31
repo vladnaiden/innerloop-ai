@@ -1,0 +1,67 @@
+name: cloudflare-analytics
+description: "Cloudflare zone analytics over GraphQL — requests broken down by user agent, path and country. This is the only way to see whether AI crawlers (GPTBot, ClaudeBot, PerplexityBot, Google-Extended) are actually reading the site: none of them publish a webmaster console, so crawl volume at the edge is the measurement."
+base: https://api.cloudflare.com/client/v4
+docs: https://developers.cloudflare.com/analytics/graphql-api/
+free: "included on the free plan; httpRequestsAdaptiveGroups retains ~3 days on free, 30+ on paid"
+rate_limit: "300/min"
+cache: "1h"
+auth:
+  type: bearer
+  token: $secret:cloudflare_analytics_token
+setup:
+  - "The existing cloudflare tokens do NOT work here: both were refused with 'does not have permission com.cloudflare.api.account.zone.analytics.read' (measured 31.08.2026)."
+  - "Cloudflare dashboard → My Profile → API Tokens → edit the existing token (or create one) and add the permission **Zone → Analytics → Read** for the zone."
+  - "Run: api secrets set cloudflare_analytics_token <token>"
+
+notes:
+  - "Free-plan retention on httpRequestsAdaptiveGroups is short (about 3 days). Pull daily and store, or the history simply is not there to ask for."
+  - "`userAgent` is the raw header, so counting AI crawlers means matching substrings — a bot that changes its UA string disappears from the count rather than erroring."
+
+endpoints:
+  user_agents:
+    description: "Request counts per user agent for a zone. Filter the output for gptbot / claudebot / perplexity / ccbot / google-extended to see AI-crawler volume."
+    path: /graphql
+    method: POST
+    body:
+      query: "query($zone:String!,$from:Time!,$to:Time!,$limit:Int!){viewer{zones(filter:{zoneTag:$zone}){httpRequestsAdaptiveGroups(limit:$limit,filter:{datetime_geq:$from,datetime_leq:$to},orderBy:[count_DESC]){count dimensions{userAgent}}}}}"
+      variables:
+        zone: "{{zone}}"
+        from: "{{from}}"
+        to: "{{to}}"
+        limit: "{{limit}}"
+    params:
+      zone: { description: "Cloudflare zone id.", required: true, in: body, example: "81cdc7057b82f603c0396b62fb767cb3" }
+      from: { description: "ISO8601 start, e.g. 2026-08-28T00:00:00Z", required: true, in: body, example: "2026-08-28T00:00:00Z" }
+      to: { description: "ISO8601 end.", required: true, in: body, example: "2026-08-31T00:00:00Z" }
+      limit: { description: "Rows to return.", type: number, default: 100, in: body }
+    result:
+      items: $.data.viewer.zones[0].httpRequestsAdaptiveGroups
+      fields:
+        user_agent: $.dimensions.userAgent
+        requests: $.count
+    example: 'call_api(api: "cloudflare-analytics", endpoint: "user_agents", params: {zone: "81cdc7057b82f603c0396b62fb767cb3", from: "2026-08-28T00:00:00Z", to: "2026-08-31T00:00:00Z"})'
+    notes: "GraphQL returns HTTP 200 even when it refuses: a permission failure arrives as an `errors` array with an empty `data`, so an empty result here usually means the token lacks Zone → Analytics → Read rather than that nobody visited."
+
+  paths:
+    description: "Request counts per path — which pages crawlers and readers actually fetch."
+    path: /graphql
+    method: POST
+    body:
+      query: "query($zone:String!,$from:Time!,$to:Time!,$limit:Int!){viewer{zones(filter:{zoneTag:$zone}){httpRequestsAdaptiveGroups(limit:$limit,filter:{datetime_geq:$from,datetime_leq:$to},orderBy:[count_DESC]){count dimensions{clientRequestPath clientRequestHTTPHost}}}}}"
+      variables:
+        zone: "{{zone}}"
+        from: "{{from}}"
+        to: "{{to}}"
+        limit: "{{limit}}"
+    params:
+      zone: { description: "Cloudflare zone id.", required: true, in: body, example: "81cdc7057b82f603c0396b62fb767cb3" }
+      from: { description: "ISO8601 start.", required: true, in: body, example: "2026-08-28T00:00:00Z" }
+      to: { description: "ISO8601 end.", required: true, in: body, example: "2026-08-31T00:00:00Z" }
+      limit: { description: "Rows to return.", type: number, default: 100, in: body }
+    result:
+      items: $.data.viewer.zones[0].httpRequestsAdaptiveGroups
+      fields:
+        host: $.dimensions.clientRequestHTTPHost
+        path: $.dimensions.clientRequestPath
+        requests: $.count
+    example: 'call_api(api: "cloudflare-analytics", endpoint: "paths", params: {zone: "81cdc7057b82f603c0396b62fb767cb3", from: "2026-08-28T00:00:00Z", to: "2026-08-31T00:00:00Z"})'
