@@ -35,6 +35,11 @@ endpoints:
         - name: activeUsers
         - name: engagementRate
         - name: averageSessionDuration
+      dimensionFilter:
+        filter:
+          fieldName: hostName
+          stringFilter:
+            value: "{{host}}"
       orderBys:
         - metric: { metricName: sessions }
           desc: true
@@ -44,16 +49,23 @@ endpoints:
         description: "Numeric GA4 property id (Admin → Property details)."
         required: true
         example: "501234567"
+      host:
+        description: "Hostname to report on. This property receives hits from several sites (blog, old subdomain, preview deploys, localhost), so every report is filtered to one host — otherwise the numbers are a blend of all of them."
+        default: affiliate-registry.com
+        in: body
       start:
         description: "Start date, YYYY-MM-DD or a relative token like 28daysAgo."
         default: 28daysAgo
+        in: body
       end:
         description: "End date, YYYY-MM-DD or `today`/`yesterday`."
         default: yesterday
+        in: body
       limit:
         description: Rows to return.
         type: number
         default: 100
+        in: body
     result:
       items: $.rows
       fields:
@@ -78,15 +90,24 @@ endpoints:
         - name: sessions
         - name: engagedSessions
         - name: activeUsers
+      dimensionFilter:
+        filter:
+          fieldName: hostName
+          stringFilter:
+            value: "{{host}}"
       orderBys:
         - metric: { metricName: sessions }
           desc: true
       limit: "{{limit}}"
     params:
       property: { description: "Numeric GA4 property id.", required: true, example: "501234567" }
-      start: { description: "Start date or relative token.", default: 28daysAgo }
-      end: { description: "End date or relative token.", default: yesterday }
-      limit: { description: Rows to return., type: number, default: 50 }
+      host:
+        description: "Hostname to report on. This property receives hits from several sites (blog, old subdomain, preview deploys, localhost), so every report is filtered to one host — otherwise the numbers are a blend of all of them."
+        default: affiliate-registry.com
+        in: body
+      start: { description: "Start date or relative token.", default: 28daysAgo, in: body }
+      end: { description: "End date or relative token.", default: yesterday, in: body }
+      limit: { description: Rows to return., type: number, default: 50, in: body }
     result:
       items: $.rows
       fields:
@@ -110,15 +131,24 @@ endpoints:
       metrics:
         - name: sessions
         - name: activeUsers
+      dimensionFilter:
+        filter:
+          fieldName: hostName
+          stringFilter:
+            value: "{{host}}"
       orderBys:
         - metric: { metricName: sessions }
           desc: true
       limit: "{{limit}}"
     params:
       property: { description: "Numeric GA4 property id.", required: true, example: "501234567" }
-      start: { description: "Start date or relative token.", default: 28daysAgo }
-      end: { description: "End date or relative token.", default: yesterday }
-      limit: { description: Rows to return., type: number, default: 100 }
+      host:
+        description: "Hostname to report on. This property receives hits from several sites (blog, old subdomain, preview deploys, localhost), so every report is filtered to one host — otherwise the numbers are a blend of all of them."
+        default: affiliate-registry.com
+        in: body
+      start: { description: "Start date or relative token.", default: 28daysAgo, in: body }
+      end: { description: "End date or relative token.", default: yesterday, in: body }
+      limit: { description: Rows to return., type: number, default: 100, in: body }
     result:
       items: $.rows
       fields:
@@ -127,3 +157,33 @@ endpoints:
         sessions: $.metricValues[0].value
         users: $.metricValues[1].value
     example: 'call_api(api: "ga4", endpoint: "countries", params: {property: "501234567"})'
+
+  hosts:
+    description: "Sessions per hostname. The check that matters when one GA4 property is wired into more than one site — the other endpoints silently mix them, and every per-page number is then wrong."
+    path: /properties/{{property}}:runReport
+    method: POST
+    body:
+      dateRanges:
+        - startDate: "{{start}}"
+          endDate: "{{end}}"
+      dimensions:
+        - name: hostName
+      metrics:
+        - name: sessions
+        - name: activeUsers
+      orderBys:
+        - metric: { metricName: sessions }
+          desc: true
+      limit: 50
+    params:
+      property: { description: "Numeric GA4 property id.", required: true, example: "501234567" }
+      start: { description: "Start date or relative token.", default: 28daysAgo, in: body }
+      end: { description: "End date or relative token.", default: yesterday, in: body }
+    result:
+      items: $.rows
+      fields:
+        host: $.dimensionValues[0].value
+        sessions: $.metricValues[0].value
+        users: $.metricValues[1].value
+    example: 'call_api(api: "ga4", endpoint: "hosts", params: {property: "551309693"})'
+    notes: "More than one row here means the property is shared and `landing_pages` is summing two sites. Split the properties, or filter every report by hostName."
