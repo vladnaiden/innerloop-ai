@@ -32,6 +32,54 @@ const { canonRow, CANON_COLS } = require("./canon.js");
 
 const rawPath = (slug) => path.join(RAW, `${slug.replace(/[^a-z0-9._-]+/gi, "_")}.html.gz`);
 
+/**
+ * The public URL slug, and the module-scoped key the crawler recognises its own rows by.
+ *
+ * These used to be the same string, `<module>-<source slug>`, which put the crawler's own
+ * implementation detail into 140,698 public URLs. Measured in Search Console 24.08-02.09.2026:
+ * those pages drew 0 impressions against 7,092 from the 41,444 brand-slug pages, and an
+ * inspection sample found none of them indexed ("URL is unknown to Google"). So the identity
+ * moved to `source_key` — never published, unique per module — and `slug` is now minted from
+ * the brand with the same rules mk_slugs.js uses, so the site has one slug convention.
+ *
+ * A slug is assigned once, at insert, and never rewritten by a later crawl: a corrected
+ * program_name must not silently move a URL Google has already indexed. Renames go through
+ * rebrand_slugs.js, which records the 301 in mr_slug_alias.
+ */
+const slugify = (s) =>
+  String(s || "")
+    .normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9\u0400-\u04ff\u4e00-\u9fff]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 70)
+    .replace(/-+$/, "");
+
+/** `<module>.<source slug>` is a synthesised domain: the head names the module, the tail is usable. */
+const brandFromDomain = (domain) => {
+  if (!domain) return "";
+  const na = SITE.replace(/[^a-z0-9]/gi, "").toLowerCase();
+  const i = domain.indexOf(".");
+  if (i > 0) {
+    const head = domain.slice(0, i).replace(/[^a-z0-9]/gi, "").toLowerCase();
+    if (head === na || na.startsWith(head) || head.startsWith(na)) domain = domain.slice(i + 1);
+  }
+  if (/^[0-9-]+$/.test(domain)) return "";
+  if (domain.replace(/[^a-z0-9]/gi, "").toLowerCase().startsWith(na)) return "";
+  return slugify(domain);
+};
+
+/** Deterministic, so a retry after a collision lands on the same URL rather than a new one. */
+const shortHash = (s) => crypto.createHash("sha1").update(s).digest("hex").slice(0, 6);
+
+const brandSlug = (name, domain, sourceKey) => {
+  let base = slugify(name);
+  if (base.length < 2) base = brandFromDomain(domain);
+  if (base.length < 2) base = `program-${shortHash(sourceKey)}`;
+  return base;
+};
+
 const COLS = ["landing_url", "signup_url", "logo_url", "description", "network", "categories", "commission", "commission_type",
   "pct_min", "pct_max", "flat_min", "flat_max", "recurring", "lifetime", "cookie_days", "cookie_length_raw", "source_updated", "established_year", "tags",
   "countries", "currency", "min_payout", "hold_days", "payment_methods", "payment_frequency", "contact_email", "socials", "affiliate_managers", "phone", "telegram", "skype", "rating_avg", "rating_count", "offers_count", "vertical",
@@ -42,7 +90,9 @@ async function upsert(db, row, slug, url, fetchedAt) {
   if (!row.signup_url && row.landing_url) row.signup_url = row.landing_url;
   const domain = row.domain || `${SITE}.${slug}`;
   const name = row.program_name; if (!name) throw new Error("no program_name");
-  const fullSlug = `${SITE}-${slug}`.toLowerCase().slice(0, 120);
+  // identity: module-scoped, unique, never published. The public slug is a separate, brand-derived value.
+  const sourceKey = `${SITE}-${slug}`.toLowerCase().slice(0, 120);
+  const brandBase = brandSlug(name, domain, sourceKey);
   const extra = { ...(row.extra || {}), provenance: { site: SITE, url, fetched_at: fetchedAt } };
   // Canonical English values for everything a reader filters by, written alongside the raw fields and
   // never over them (canon.js). Without this a reader filtering "Wire transfer" misses every programme
@@ -51,48 +101,46 @@ async function upsert(db, row, slug, url, fetchedAt) {
   // a parser that computed NaN has no value, not a broken one — never let it reach Postgres
   const vals = COLS.map((c) => c === "tags" ? (row.tags || []) : (row[c] === undefined || (typeof row[c] === "number" && !Number.isFinite(row[c])) ? null : row[c]));
   const sets = COLS.map((c, i) => `${c} = $${i + 6}`).join(", ");
-  const base = [fullSlug, url, domain, name, JSON.stringify(extra), ...vals];
-  // 1. our own row (by slug) — plain overwrite, this parser owns it
-  let r;
-  try {
-    r = await db.query(
-      `UPDATE mr_program SET detail_url = $2, source_url = $2, source_endpoint = 'GET ' || $2, source_fetched_at = now(),
-         domain = $3, program_name = $4, extra = COALESCE(extra,'{}'::jsonb) || $5::jsonb, parser_version = '${PV}', parsed_at = now(), enriched_at = now(), last_checked = now(),
-         site_adapter = '${SITE}', lang = '${site.lang}', region = '${site.region}', ${sets}
-       WHERE slug = $1 RETURNING seq`, base);
-  } catch (e) {
-    if (e.code !== "23505") throw e;
-    // a re-parse renamed our row onto a brand that already exists from another source:
-    // fill that brand row's gaps and retire our duplicate instead of keeping two rows for one programme
-    await db.query(
-      `UPDATE mr_program SET ${COLS.map((c, i) => `${c} = COALESCE(mr_program.${c}, $${i + 6})`).join(", ")},
-         extra = COALESCE(extra,'{}'::jsonb) || jsonb_build_object('also_on', COALESCE(extra->'also_on','[]'::jsonb) || to_jsonb('${SITE}'::text)) || ($5::jsonb - 'provenance'), last_checked = now()
-       WHERE domain = $3 AND program_name = $4 AND slug <> $1`, base);
-    await db.query(`DELETE FROM mr_program WHERE slug = $1`, [fullSlug]);
-    metric({ ev: "merged", slug, domain, name, via: "rename" });
-    return "merged";
-  }
+  const base = [sourceKey, url, domain, name, JSON.stringify(extra), ...vals];
+  const P = COLS.length + 6;   // the public slug rides last, so COLS keep their positions
+
+  // 1. our own row (by source_key) — plain overwrite, this parser owns it.
+  //    `slug` is deliberately absent from the SET list: a URL Google has indexed must not move
+  //    because a source corrected a program name. rebrand_slugs.js owns renames, with a 301.
+  const r = await db.query(
+    `UPDATE mr_program SET detail_url = $2, source_url = $2, source_endpoint = 'GET ' || $2, source_fetched_at = now(),
+       domain = $3, program_name = $4, extra = COALESCE(extra,'{}'::jsonb) || $5::jsonb, parser_version = '${PV}', parsed_at = now(), enriched_at = now(), last_checked = now(),
+       site_adapter = '${SITE}', lang = '${site.lang}', region = '${site.region}', ${sets}
+     WHERE source_key = $1 RETURNING seq`, base);
   if (r.rowCount) return "updated";
-  try {
-    await db.query(
-      `INSERT INTO mr_program (slug, detail_url, source_url, source_endpoint, source_fetched_at, domain, program_name, extra, parser_version, parsed_at, enriched_at, last_checked, site_adapter, lang, region, ${COLS.join(",")})
-       VALUES ($1, $2, $2, 'GET ' || $2, now(), $3, $4, $5::jsonb, '${PV}', now(), now(), now(), '${SITE}', '${site.lang}', '${site.region}', ${COLS.map((_, i) => `$${i + 6}`).join(",")})`, base);
-    return "inserted";
-  } catch (e) {
-    if (e.code !== "23505") throw e;
-    // 2. the same brand already exists from another source (domain, program_name):
-    //    fill only its empty fields and record that this source also lists it.
-    // an authoritative module (a detail page replacing a listing stub) overwrites and takes ownership;
-    // otherwise only the brand's empty fields are filled and the extra source is recorded
-    const fill = site.authoritative
-      ? COLS.map((c, i) => `${c} = $${i + 6}`).join(", ") + `, site_adapter = '${SITE}', detail_url = $2, source_url = $2, source_endpoint = 'GET ' || $2, parser_version = '${PV}', parsed_at = now(), extra = COALESCE(extra,'{}'::jsonb) || $5::jsonb`
-      : COLS.map((c, i) => `${c} = COALESCE(mr_program.${c}, $${i + 6})`).join(", ") + `, extra = COALESCE(extra,'{}'::jsonb) || jsonb_build_object('also_on', COALESCE(extra->'also_on','[]'::jsonb) || jsonb_build_array($2::text))`;
-    await db.query(
-      `UPDATE mr_program SET ${fill}, last_checked = now()
-       WHERE domain = $3 AND program_name = $4 AND slug <> $1 AND $5::jsonb IS NOT NULL`, base);
-    metric({ ev: "merged", slug, domain, name });
-    return "merged";
+
+  // 2. insert. Two different unique indexes can refuse it, and they mean opposite things.
+  for (const cand of [brandBase, `${brandBase}-${shortHash(sourceKey)}`]) {
+    try {
+      await db.query(
+        `INSERT INTO mr_program (source_key, detail_url, source_url, source_endpoint, source_fetched_at, domain, program_name, extra, parser_version, parsed_at, enriched_at, last_checked, site_adapter, lang, region, ${COLS.join(",")}, slug)
+         VALUES ($1, $2, $2, 'GET ' || $2, now(), $3, $4, $5::jsonb, '${PV}', now(), now(), now(), '${SITE}', '${site.lang}', '${site.region}', ${COLS.map((_, i) => `$${i + 6}`).join(",")}, $${P})`,
+        [...base, cand]);
+      return "inserted";
+    } catch (e) {
+      if (e.code !== "23505") throw e;
+      // another row already owns this brand slug — take the deterministic second candidate and retry
+      if (e.constraint === "ux_p_slug" && cand === brandBase) continue;
+      // 3. the same brand already exists from another source (domain, program_name):
+      //    fill only its empty fields and record that this source also lists it.
+      // an authoritative module (a detail page replacing a listing stub) overwrites and takes ownership;
+      // otherwise only the brand's empty fields are filled and the extra source is recorded
+      const fill = site.authoritative
+        ? COLS.map((c, i) => `${c} = $${i + 6}`).join(", ") + `, site_adapter = '${SITE}', detail_url = $2, source_url = $2, source_endpoint = 'GET ' || $2, parser_version = '${PV}', parsed_at = now(), extra = COALESCE(extra,'{}'::jsonb) || $5::jsonb`
+        : COLS.map((c, i) => `${c} = COALESCE(mr_program.${c}, $${i + 6})`).join(", ") + `, extra = COALESCE(extra,'{}'::jsonb) || jsonb_build_object('also_on', COALESCE(extra->'also_on','[]'::jsonb) || jsonb_build_array($2::text))`;
+      await db.query(
+        `UPDATE mr_program SET ${fill}, last_checked = now()
+         WHERE domain = $3 AND program_name = $4 AND source_key IS DISTINCT FROM $1 AND $5::jsonb IS NOT NULL`, base);
+      metric({ ev: "merged", slug, domain, name });
+      return "merged";
+    }
   }
+  return "merged";
 }
 
 (async () => {
