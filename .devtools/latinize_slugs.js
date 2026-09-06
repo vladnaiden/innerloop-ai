@@ -23,6 +23,9 @@ const DRY = process.argv.includes("--dry");
 const arg = (k, d) => { const i = process.argv.indexOf(k); return i > -1 ? process.argv[i + 1] : d; };
 const TARGET = arg("--target", "local");
 const NON_LATIN = `slug ~ '[^ -~]'`;
+/** A non-ASCII *title* is what needs translating; after the first pass its slug is already Latin
+ *  (transliterated), so selecting on the slug alone would find nothing to re-mint. */
+const NON_LATIN_NAME = `program_name ~ '[\\u0400-\\u04FF\\u3040-\\u30FF\\u4E00-\\u9FFF\\uAC00-\\uD7AF]'`;
 /** A slug that leads with a module name whose synthesised domain head is that same module: the
  *  first pass minted 1,665 of these because `site_adapter` was NULL. Narrow on purpose — a brand
  *  whose name genuinely IS a module (TradeTracker.com) has a real domain and is never matched. */
@@ -46,7 +49,9 @@ const MODULE_LED = (mods) => mods.length
     ...(await db.query(`SELECT DISTINCT site_adapter FROM mr_program WHERE site_adapter IS NOT NULL`)).rows.map((r) => r.site_adapter),
   ])].filter((m) => /^[a-z0-9_]+$/.test(m));
   const modules = new Set(MODULES);
-  const SELECT = `${NON_LATIN} OR ${MODULE_LED(MODULES)}`;
+  // MODULE_LED is spent: the module-prefix pass already left 0 rows. Keeping it here would only
+  // re-mint brands whose slug is already correct (gdeslon-gdeslon-ru), which is churn, not a fix.
+  const SELECT = `${NON_LATIN} OR ${NON_LATIN_NAME}`;
 
   const rows = (await db.query(
     `SELECT seq, slug, program_name, domain, site_adapter
@@ -54,7 +59,7 @@ const MODULE_LED = (mods) => mods.length
   // Every slug that is NOT being renamed is already taken and outranks a newcomer.
   const taken = new Set((await db.query(
     `SELECT slug FROM mr_program WHERE slug IS NOT NULL AND NOT (${SELECT})`)).rows.map((r) => r.slug));
-  console.log(`candidates (non-Latin or module-led): ${rows.length.toLocaleString()}   slugs kept as-is: ${taken.size.toLocaleString()}`);
+  console.log(`candidates (non-Latin slug or title, or module-led): ${rows.length.toLocaleString()}   slugs kept as-is: ${taken.size.toLocaleString()}`);
 
   const plan = [], src = { name: 0, domain: 0, seq: 0 };
   let collided = 0;
@@ -114,8 +119,10 @@ const MODULE_LED = (mods) => mods.length
     }
     // The 301. An old_slug already present keeps pointing at the newest target, and any alias that
     // pointed AT a slug we just moved is re-pointed, so a two-hop chain never forms.
-    for (let i = 0; i < plan.length; i += CHUNK) {
-      const c = plan.slice(i, i + CHUNK);
+    // A row whose slug was NULL has no retired URL to redirect from — it gets a slug, not an alias.
+    const hops = plan.filter((p) => p.old);
+    for (let i = 0; i < hops.length; i += CHUNK) {
+      const c = hops.slice(i, i + CHUNK);
       await db.query(
         `INSERT INTO mr_slug_alias (old_slug, new_slug) VALUES ${values(c).replace(/::bigint/g, "::text")}
            ON CONFLICT (old_slug) DO UPDATE SET new_slug = EXCLUDED.new_slug, changed_at = now()`,
@@ -126,12 +133,32 @@ const MODULE_LED = (mods) => mods.length
           WHERE a.new_slug = v.old`,
         c.flatMap((p) => [p.old, p.next]));
     }
+    // Flatten A->B->C to A->C. The per-chunk re-point above cannot see a hop created by a LATER
+    // chunk, so one pass per chunk leaves a few chains (73 of 161,745 on the 06.09 run). A chain
+    // still resolves, but it spends two crawls where one would do.
+    for (let i = 0; i < 10; i++) {
+      const r = await db.query(`UPDATE mr_slug_alias a SET new_slug = b.new_slug, changed_at = now()
+                                  FROM mr_slug_alias b
+                                 WHERE a.new_slug = b.old_slug AND a.old_slug <> b.new_slug`);
+      if (!r.rowCount) break;
+    }
     await db.query(`DELETE FROM mr_slug_alias WHERE old_slug = new_slug`);   // a no-op hop
     await db.query("COMMIT");
   } catch (e) { await db.query("ROLLBACK"); console.error("rolled back:", e.message); process.exit(1); }
 
   // Count NON_LATIN, not SELECT: SELECT also matches the module-led brands that legitimately
   // re-mint to the slug they already have (gdeslon.ru), and counting those read as a failure.
+  // Program pages are cached for 30 days (lib/programCache.ts) and freshness comes from this call,
+  // not a timer — sync_enriched.js makes it after a push and a rename needs it just as much.
+  // Without it every renamed URL keeps serving its old page, and every alias miss keeps 404ing.
+  if (TARGET === "hosted" && process.env.ADMIN_TOKEN) {
+    const r = await fetch(`https://affiliate-registry.com/api/admin/revalidate-programs?token=${process.env.ADMIN_TOKEN}`)
+      .then((x) => x.status).catch((e) => e.message);
+    console.log(`revalidate-programs: ${r}`);
+  } else if (TARGET === "hosted") {
+    console.log("ADMIN_TOKEN not set — run /api/admin/revalidate-programs by hand or the old pages stay cached");
+  }
+
   const left = (await db.query(`SELECT count(*)::int n FROM mr_program WHERE ${NON_LATIN}`)).rows[0].n;
   const led = (await db.query(`SELECT count(*)::int n FROM mr_program WHERE ${SELECT}`)).rows[0].n - left;
   console.log(`\ncommitted. non-Latin slugs remaining: ${left} ${left ? "*** CHECK ***" : "OK"}` +
