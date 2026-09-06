@@ -11,6 +11,7 @@ const { Client } = require("pg");
 const { clean: cleanUrl } = require("./url_clean");
 const af = require("./af.js");
 const crypto = require("crypto");
+const { latinSlugify, latinYield } = require("./latin_slug.js");
 const arg = (k, d) => { const i = process.argv.indexOf(k); return i === -1 ? d : process.argv[i + 1]; };
 const SITE = arg("--site"); if (!SITE) { console.error("--site required"); process.exit(2); }
 const site = require(`./sites/${SITE}.js`);
@@ -45,16 +46,14 @@ const rawPath = (slug) => path.join(RAW, `${slug.replace(/[^a-z0-9._-]+/gi, "_")
  * A slug is assigned once, at insert, and never rewritten by a later crawl: a corrected
  * program_name must not silently move a URL Google has already indexed. Renames go through
  * rebrand_slugs.js, which records the 301 in mr_slug_alias.
+ *
+ * Latin only. This used to keep Cyrillic and CJK, which put 15,301 non-Latin slugs into public
+ * URLs; a non-ASCII slug in a `Location` header throws ERR_INVALID_CHAR, which 500'd every one of
+ * their retired URLs and cut Googlebot from 35,458 requests/day to 1,270 (02-06.09.2026).
+ * The rule now lives in latin_slug.js, shared with latinize_slugs.js so a re-crawl cannot
+ * reintroduce what that pass removed.
  */
-const slugify = (s) =>
-  String(s || "")
-    .normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/&/g, " and ")
-    .replace(/[^a-z0-9\u0400-\u04ff\u4e00-\u9fff]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 70)
-    .replace(/-+$/, "");
+const slugify = latinSlugify;
 
 /** `<module>.<source slug>` is a synthesised domain: the head names the module, the tail is usable. */
 const brandFromDomain = (domain) => {
@@ -75,6 +74,9 @@ const shortHash = (s) => crypto.createHash("sha1").update(s).digest("hex").slice
 
 const brandSlug = (name, domain, sourceKey) => {
   let base = slugify(name);
+  // A title that romanises to a stub — a CJK one keeps only its Latin fragment ("TCJ日本語…" -> "tcj")
+  // — is worse than the source's own readable domain tail, which carries the whole name.
+  if (latinYield(name) < 0.5) { const d = brandFromDomain(domain); if (d.length >= 2) base = d; }
   if (base.length < 2) base = brandFromDomain(domain);
   if (base.length < 2) base = `program-${shortHash(sourceKey)}`;
   return base;
