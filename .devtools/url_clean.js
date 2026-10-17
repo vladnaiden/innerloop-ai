@@ -13,6 +13,12 @@ const KEEP = { "signup.cj.com": ["cid"], "www.cj.com": ["cid"], "members.cj.com"
 const STRONG = new Set(["affid", "aff_id", "affiliate_id", "affiliateid", "aff_sub", "aff_click_id", "sub1", "sub2", "sub3", "subid", "sub_id", "sub_id1", "sub_id2", "sub_id3", "sub_id4", "sub_id5", "subid1", "clickid", "click_id", "irclickid", "cjevent", "awc", "zanpid", "transaction_id", "_ef_transaction_id", "tracking_id", "trkid", "trk_id", "hop", "hopid", "sscid", "rfsn", "mbsy", "refid", "partner_id", "partnerid", "pid", "uid", "oid", "afftrack", "afmc", "raf", "aff", "sid"]);
 // directory brands whose name inside a URL is attribution to that directory, wherever it sits
 const BRANDS = /(affiliatewatch|affwatch|affiliate-watch|affililist|offervault|affpaying|uppromote|linkclicky|cuelinks|topranked|15m\.com|affnext|affcaptain|partnerkin|palaimedia|leadpandamedia|gdetraffic|affmoment|statsdrone|affcatalog|affroom|affbank|businessofapps|afftank|cpa[-_.]?club|getreditus|reditus|affiliateroll|partnerstack|indoleads|affiliatekatalog|affiverse|affilord|findaffiliates|afliet|alverde|e-provize|vivnetworks|2performant|profitshare|gambling-partnerki|gooodbro|travelpayouts|affisearch|affdays|affhub|uaff|palai|conversion\.im|cpainform|cpad\.pro|affplus|affbun|lasso)/i;
+/* The directories we crawl, by their own host. A directory's own page is provenance, not
+   attribution: uaff.media/partners is uaff's affiliate programme, not the programme of the
+   brand whose listing links to it. url_clean uses it to keep a provenance link; brand_affiliate
+   uses it to refuse the probe entirely — on 16.10.2026 it read 50% off that page and wrote it
+   onto ODDX PARTNERS, which is exactly the "a number that sat nearby" error. */
+const DIRECTORY_HOSTS = /(^|\.)(media-analytics\.jp|gdetraffic\.com|gooodbro\.com|partnerkin\.com|cpainform\.ru|cpad\.pro|palai\.media|uaff\.media|leadpanda\.media|affhub\.media|conversion\.im|cpa\.rip|cpa\.club|afftrends\.com|affmoment\.com|gambling-partnerki\.com|best-affiliate-programs\.net|postaffiliatepro\.com|statsdrone\.com|affcatalog\.com|aff\.studio|affiliatekatalog\.com|e-provize\.cz|alverde\.net|afliet\.com|topranked\.io|findaffiliates\.online|affiliateroll\.com|affnext\.com|affcaptain\.com|affroom\.com|afftank\.com|affiversemedia\.com|affilord\.com|15m\.com|cuelinks\.com|linkclicky\.com|uppromote\.com|affpaying\.com|offervault\.com|affplus\.com|affbank\.com|businessofapps\.com|indoleads\.com|getreditus\.com|market\.partnerstack\.com|vivnetworks\.com|2performant\.com|profitshare\.ro|travelpayouts\.com|affdays\.com|clubaffiliation\.com|100partnerprogramme\.de|affiliate-marketing\.de|affililist\.com|admitad\.ru|tradedoubler\.com|tradetracker\.com|ehub\.cz|webgains\.com|saleads\.pro|leadgid\.ru|cpa\.house|dr\.cash|primelead\.com\.ua|partner-ads\.com|communicationads\.net|adpump\.com|actionpay\.com\.br|gdeslon\.ru|epn\.bz|leads\.su|nutriprofits\.com)$/i;
 const PLACEHOLDER = /\{[a-z_]+\}|\[\[|%7B[a-z_]+%7D|#[a-z_]+#/i;
 function clean(url) {
   if (!url || typeof url !== "string") return { url: null, changed: false, reason: null };
@@ -28,9 +34,7 @@ function clean(url) {
   }
   if (TRACKING_HOSTS.test(host)) return { url: null, changed: true, reason: "tracking-host" };
   if (/(^|\.)affiliate\.watch$/.test(host)) return { url: null, changed: true, reason: "directory-own-link" };
-  // a directory's OWN page (its name in the host) is provenance, not attribution — only a third-party host carrying the token is
-  const OWN = /(^|\.)(media-analytics\.jp|gdetraffic\.com|gooodbro\.com|partnerkin\.com|cpainform\.ru|cpad\.pro|palai\.media|uaff\.media|leadpanda\.media|affhub\.media|conversion\.im|cpa\.rip|cpa\.club|afftrends\.com|affmoment\.com|gambling-partnerki\.com|best-affiliate-programs\.net|postaffiliatepro\.com|statsdrone\.com|affcatalog\.com|aff\.studio|affiliatekatalog\.com|e-provize\.cz|alverde\.net|afliet\.com|topranked\.io|findaffiliates\.online|affiliateroll\.com|affnext\.com|affcaptain\.com|affroom\.com|afftank\.com|affiversemedia\.com|affilord\.com|15m\.com|cuelinks\.com|linkclicky\.com|uppromote\.com|affpaying\.com|offervault\.com|affplus\.com|affbank\.com|businessofapps\.com|indoleads\.com|getreditus\.com|market\.partnerstack\.com|vivnetworks\.com|2performant\.com|profitshare\.ro|travelpayouts\.com|affdays\.com|clubaffiliation\.com|100partnerprogramme\.de|affiliate-marketing\.de|affililist\.com|admitad\.ru|tradedoubler\.com|tradetracker\.com|ehub\.cz|webgains\.com|saleads\.pro|leadgid\.ru|cpa\.house|dr\.cash|primelead\.com\.ua|partner-ads\.com|communicationads\.net|adpump\.com|actionpay\.com\.br|gdeslon\.ru|epn\.bz|leads\.su|nutriprofits\.com)$/i;
-  if (!BRANDS.test(host) && !OWN.test(host) && (BRANDS.test(p.pathname) || BRANDS.test(p.hash))) return { url: null, changed: true, reason: "brand-in-path" };
+  if (!BRANDS.test(host) && !DIRECTORY_HOSTS.test(host) && (BRANDS.test(p.pathname) || BRANDS.test(p.hash))) return { url: null, changed: true, reason: "brand-in-path" };
   for (const [k, v] of [...p.searchParams.entries()]) if (BRANDS.test(v)) p.searchParams.delete(k);
   if (TRACKING_PATHS.test(p.pathname + p.search)) return { url: null, changed: true, reason: "tracking-path" };
   if (/\/(signup|register|sign-up|registration|join)\b/i.test(p.pathname) && [...p.searchParams.keys()].some((k) => PARAMS.has(k.toLowerCase()))) {
@@ -48,5 +52,5 @@ function clean(url) {
   const out = p.toString().replace(/\?$/, "").replace(/\/\?$/, "/");
   return { url: out, changed: true, reason: "params" };
 }
-module.exports = { clean, PARAMS, TRACKING_HOSTS, TRACKING_PATHS };
+module.exports = { clean, PARAMS, TRACKING_HOSTS, TRACKING_PATHS, DIRECTORY_HOSTS };
 if (require.main === module) for (const a of process.argv.slice(2)) console.log(a, "->", JSON.stringify(clean(a)));

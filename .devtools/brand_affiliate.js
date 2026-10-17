@@ -8,6 +8,7 @@
  * rather than the whole list.
  *
  *   node brand_affiliate.js --limit 120 --delay 3000
+ *   node brand_affiliate.js --slugs pages.txt --limit 300    # these rows, in this order
  *
  * Resumable: records the attempt in extra.brand_probe so a re-run skips it.
  */
@@ -27,11 +28,22 @@ const LOOKS_AFFILIATE = /(commission|revenue share|revshare|per sale|payout|cook
 // "save 30%", "99.9% uptime". A number only counts as a rate when commission
 // wording sits next to it and discount wording does not.
 const { parseTerms } = require("./rate_terms");
+const { DIRECTORY_HOSTS } = require("./url_clean");
 
 (async () => {
   const limit = Number(arg("--limit", 120));
   const delay = Number(arg("--delay", 3000));
   const vertical = arg("--vertical", null);   // e.g. --vertical crypto: restrict the pass to one vertical (or its tags)
+  /* --slugs <file>: probe THESE rows, in the file's order, instead of the thinnest in the whole
+     table. Added 16.10.2026 because "thinnest first" is the right default and the wrong answer
+     when the question is "enrich the pages that earn Google impressions": 6,755 of 201,459 rows
+     carry all the search traffic, and a limit-bounded thinnest-first pass reaches almost none of
+     them. The file is one slug per line, ordered by impressions, so the crawl spends itself where
+     the readers are. Everything else about the pass is unchanged — same filters, same pacing. */
+  const slugFile = arg("--slugs", null);
+  const wanted = slugFile
+    ? require("fs").readFileSync(slugFile, "utf8").split("\n").map(x => x.trim()).filter(Boolean)
+    : null;
   const db = new Client({ host: "host.docker.internal", port: 5432, database: "app", user: "postgres", password: "postgres" });
   await db.connect();
   await af.init();
@@ -54,14 +66,26 @@ const { parseTerms } = require("./rate_terms");
        -- Brands with their own affiliate page hit ~25%.
        AND COALESCE(site_adapter,'') NOT IN ('offervault','affplus')
        ${vertical ? `AND (vertical = '${vertical.replace(/'/g, "")}' OR tags && ARRAY['${vertical.replace(/'/g, "")}'])` : ""}
-     ORDER BY COALESCE(data_score,0) ASC, seq LIMIT $1`, [limit])).rows;
+     ${wanted ? "AND slug = ANY($2::text[])" : ""}
+     ${wanted ? "ORDER BY array_position($2::text[], slug)" : "ORDER BY COALESCE(data_score,0) ASC, seq"}
+     LIMIT $1`, wanted ? [limit, wanted] : [limit])).rows;
   console.log(`probing ${rows.length} brand affiliate pages`);
 
-  let hits = 0, fields = 0, dead = 0, network = 0, unreachable = 0;
+  let hits = 0, fields = 0, dead = 0, network = 0, unreachable = 0, directory = 0;
   for (const r of rows) {
     let host;
     try { host = new URL(r.signup_url).hostname.replace(/^www\./, ""); } catch { continue; }
     if (/\.offers$/.test(host)) continue;
+    /* The row's signup_url sometimes points at the DIRECTORY that listed it, not at the brand.
+       Probing /partners there reads the directory's own affiliate programme and attributes its
+       numbers to this row: on 16.10.2026 uaff.media/partners gave "50%" to ODDX PARTNERS. The
+       network check below only catches it once a second row has recorded the same URL, so the
+       first victim is always mis-attributed. Refuse the host outright instead. */
+    if (DIRECTORY_HOSTS.test(host)) {
+      await db.query(`UPDATE mr_program SET extra = COALESCE(extra,'{}'::jsonb) || $2::jsonb WHERE seq=$1`,
+        [r.seq, JSON.stringify({ brand_probe: "directory-host" })]);
+      directory++; continue;
+    }
     // A dead domain is the common case in this list. One local DNS lookup skips
     // it for free instead of spending five proxied requests discovering it.
     try { await dns.resolve(host); }
@@ -137,6 +161,6 @@ const { parseTerms } = require("./rate_terms");
     console.log(`  + ${r.program_name.slice(0, 24).padEnd(24)} ${Object.entries(found).map(([k, v]) => `${k}=${v}`).join(" ")}`);
     await af.pace(delay);
   }
-  console.log(`\n${hits}/${rows.length} brands published usable terms · ${fields} fields · ${dead} dead domains · ${network} network pages · ${unreachable} unreachable (left for retry)`);
+  console.log(`\n${hits}/${rows.length} brands published usable terms · ${fields} fields · ${dead} dead domains · ${network} network pages · ${directory} directory hosts refused · ${unreachable} unreachable (left for retry)`);
   await db.end();
 })().catch((e) => { console.error("ERR", e.message); process.exit(1); });
