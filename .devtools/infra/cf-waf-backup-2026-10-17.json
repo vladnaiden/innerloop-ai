@@ -1,0 +1,75 @@
+{
+  "description": "",
+  "id": "12798ba033a248e3b6e4c3f8fb5873b4",
+  "kind": "zone",
+  "last_updated": "2026-10-04T08:38:48.134349Z",
+  "name": "custom firewall",
+  "phase": "http_request_firewall_custom",
+  "rules": [
+    {
+      "action": "block",
+      "description": "ADMIN HOME-IP ONLY (owner 04.10.2026): production /admin + /api/admin + /api/billing/admin; update the IP via .devtools/infra/allow-my-ip.sh",
+      "enabled": true,
+      "expression": "(http.host in {\"affiliate-registry.com\" \"www.affiliate-registry.com\"}) and (http.request.uri.path in {\"/admin\" \"/en/admin\" \"/es/admin\" \"/pt/admin\" \"/fr/admin\" \"/de/admin\" \"/it/admin\" \"/nl/admin\" \"/pl/admin\" \"/cs/admin\" \"/ru/admin\" \"/uk/admin\" \"/tr/admin\" \"/ar/admin\" \"/hi/admin\" \"/id/admin\" \"/vi/admin\" \"/th/admin\" \"/ja/admin\" \"/ko/admin\" \"/zh/admin\" \"/admin/\" \"/en/admin/\" \"/es/admin/\" \"/pt/admin/\" \"/fr/admin/\" \"/de/admin/\" \"/it/admin/\" \"/nl/admin/\" \"/pl/admin/\" \"/cs/admin/\" \"/ru/admin/\" \"/uk/admin/\" \"/tr/admin/\" \"/ar/admin/\" \"/hi/admin/\" \"/id/admin/\" \"/vi/admin/\" \"/th/admin/\" \"/ja/admin/\" \"/ko/admin/\" \"/zh/admin/\"} or starts_with(http.request.uri.path, \"/api/admin\") or starts_with(http.request.uri.path, \"/api/billing/admin\")) and not ip.src in {91.197.68.7}",
+      "id": "dcfbae4611524422b785e232c9391460",
+      "last_updated": "2026-10-04T07:37:57.019959Z",
+      "ref": "dcfbae4611524422b785e232c9391460",
+      "version": "1"
+    },
+    {
+      "action": "skip",
+      "action_parameters": {
+        "phases": [
+          "http_ratelimit"
+        ],
+        "products": [
+          "bic",
+          "securityLevel"
+        ],
+        "ruleset": "current"
+      },
+      "description": "e2e bypass (Playwright gate)",
+      "enabled": true,
+      "expression": "http.request.headers[\"x-e2e-bypass\"][0] eq \"<REDACTED \u2014 live value is in the Coolify env, not in git>\"",
+      "id": "8327cf6d074e4f9881f7bddc98e22a00",
+      "last_updated": "2026-08-27T10:57:46.420406Z",
+      "logging": {
+        "enabled": true
+      },
+      "ref": "8327cf6d074e4f9881f7bddc98e22a00",
+      "version": "2"
+    },
+    {
+      "action": "block",
+      "description": "STAGE OWNER-ONLY (04.10.2026): stage. answers the owner's IP, the gate (skip header above) and the provider webhook; update the IP via .devtools/infra/allow-my-ip.sh",
+      "enabled": true,
+      "expression": "(http.host eq \"stage.affiliate-registry.com\") and not ip.src in {91.197.68.7} and http.request.uri.path ne \"/api/billing/webhook\"",
+      "id": "adb450c81d094ddfaa2281029ccea156",
+      "last_updated": "2026-10-04T08:38:48.134349Z",
+      "ref": "adb450c81d094ddfaa2281029ccea156",
+      "version": "1"
+    },
+    {
+      "action": "block",
+      "description": "block SEO/backlink crawlers, tool UAs and empty UA \u2014 HOME ONLY. AI crawlers (GPTBot, ClaudeBot, CCBot, PetalBot, Bytespider) unblocked 31.08.2026 by owner; search engines were never blocked.",
+      "enabled": true,
+      "expression": "(http.request.uri.path eq \"/\" or http.request.uri.path in {\"/en\" \"/es\" \"/pt\" \"/fr\" \"/de\" \"/it\" \"/nl\" \"/pl\" \"/cs\" \"/ru\" \"/uk\" \"/tr\" \"/ar\" \"/hi\" \"/id\" \"/vi\" \"/th\" \"/ja\" \"/ko\" \"/zh\"}) and ((lower(http.user_agent) contains \"ahrefs\" or lower(http.user_agent) contains \"semrush\" or lower(http.user_agent) contains \"mj12bot\" or lower(http.user_agent) contains \"dotbot\" or lower(http.user_agent) contains \"rogerbot\" or lower(http.user_agent) contains \"dataforseo\" or lower(http.user_agent) contains \"serpstat\" or lower(http.user_agent) contains \"seokicks\" or lower(http.user_agent) contains \"blexbot\") or (not cf.client.bot and (http.user_agent eq \"\" or lower(http.user_agent) contains \"python-requests\" or lower(http.user_agent) contains \"python-urllib\" or lower(http.user_agent) contains \"aiohttp\" or lower(http.user_agent) contains \"httpx\" or lower(http.user_agent) contains \"scrapy\" or lower(http.user_agent) contains \"curl/\" or lower(http.user_agent) contains \"wget/\" or lower(http.user_agent) contains \"go-http-client\" or lower(http.user_agent) contains \"java/\" or lower(http.user_agent) contains \"okhttp\" or lower(http.user_agent) contains \"libwww-perl\" or lower(http.user_agent) contains \"node-fetch\" or lower(http.user_agent) contains \"axios/\" or lower(http.user_agent) contains \"undici\" or lower(http.user_agent) contains \"httpclient\" or lower(http.user_agent) contains \"phantomjs\" or lower(http.user_agent) contains \"selenium\" or lower(http.user_agent) contains \"puppeteer\" or lower(http.user_agent) contains \"playwright\")))",
+      "id": "92b73d25c8d949688c9c2cde9c0b1876",
+      "last_updated": "2026-08-31T12:57:45.624453Z",
+      "ref": "92b73d25c8d949688c9c2cde9c0b1876",
+      "version": "4"
+    },
+    {
+      "action": "managed_challenge",
+      "description": "challenge headless browsers, page loads without Accept-Language, and self-declared crawlers not Cloudflare-verified \u2014 HOME ONLY (owner rule 29.08.2026; merged 04.10.2026 to free a slot, free plan = 5 rules)",
+      "enabled": true,
+      "expression": "(http.request.uri.path eq \"/\" or http.request.uri.path in {\"/en\" \"/es\" \"/pt\" \"/fr\" \"/de\" \"/it\" \"/nl\" \"/pl\" \"/cs\" \"/ru\" \"/uk\" \"/tr\" \"/ar\" \"/hi\" \"/id\" \"/vi\" \"/th\" \"/ja\" \"/ko\" \"/zh\"}) and ((not cf.client.bot and http.user_agent contains \"Headless\") or (not cf.client.bot and http.request.headers[\"sec-fetch-mode\"][0] eq \"navigate\" and not any(http.request.headers[\"accept-language\"][*] ne \"\")) or (not cf.client.bot and (lower(http.user_agent) contains \"bot\" or lower(http.user_agent) contains \"crawler\" or lower(http.user_agent) contains \"spider\" or lower(http.user_agent) contains \"scraper\" or lower(http.user_agent) contains \"scan\")))",
+      "id": "fffea216a7984649909f6d8350e86300",
+      "last_updated": "2026-10-04T07:37:53.061871Z",
+      "ref": "fffea216a7984649909f6d8350e86300",
+      "version": "3"
+    }
+  ],
+  "source": "firewall_custom",
+  "version": "19"
+}
