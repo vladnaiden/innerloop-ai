@@ -54,6 +54,9 @@ That capture → structure → retrieve → reflect loop is the product.
 | `secrets-intake` | Pasted key/token/password → env file without echo, one verification call, one rotate note |
 | `publish-gate` | Hosted DB changes only on "push": backup both, cleaners, competitor-link grep, `sync --prune`, verify counts |
 | `pin-invariant` | ALL-CAPS "never change this" → constant + verbatim quote + test + CLAUDE.md line |
+| `diagnosing-bugs` | Hard bug / "still broken" / "why can't you verify what's not working" → a red-capable command first, then minimise → ranked hypotheses → instrument → regression test (mattpocock/skills, MIT; a site-seam copy lives in `.devtools/affiliate-site/.claude/skills/`) |
+| `wizard` | Any step only he can do (paste/rotate a key, re-login, vendor dashboard) → a bash wizard he runs in a VS Code terminal: hidden entry, writes the env file, verifies, stamps `~/.claude/wizards/done.jsonl` (mattpocock/skills, MIT) |
+| `/handoff` | User-invoked: compact the session into `output/<date>/handoffs/` with its full session id before context runs out or a `/branch` (adapted from mattpocock/skills) |
 
 Skills were derived from a sweep of 60+ sessions (25.08.2026, `session-sweep`); their
 `description` fields carry his actual trigger wording, including Ukrainian.
