@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# Conventional Commits 1.0.0 (https://www.conventionalcommits.org) for this repo.
+# The header decides the next SemVer bump in scripts/release.sh:
+#   fix → patch · feat → minor · "!" after the type/scope or a "BREAKING CHANGE:" footer → major
+#
+#   <type>[(scope)][!]: <description>
+#   types: feat fix docs style refactor perf test build ci chore revert
+#   e.g.   feat(skills): add diagnosing-bugs
+#          fix(crawler): keep the slug when the brand is empty
+#
+# Passed through untouched: merge commits, git's own `Revert "…"`, fixup!/squash!/amend!.
+# Self-test: scripts/githooks/commit-msg --self-test
+set -euo pipefail
+
+TYPES='feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert'
+HEADER_RE="^(${TYPES})(\([^()[:space:]][^()]*\))?!?: [^[:space:]].*"
+
+check_header() {
+  local h="$1"
+  case "$h" in
+    "Merge "*|"Revert \""*|"fixup! "*|"squash! "*|"amend! "*) return 0 ;;
+  esac
+  [[ "$h" =~ $HEADER_RE ]]
+}
+
+if [ "${1:-}" = "--self-test" ]; then
+  fail=0
+  ok=( "feat: add x" "fix(crawler): keep slug" "feat(skills)!: drop y" "chore(release): v0.3.0"
+       "docs(CLAUDE.md): point to docs/" "Merge branch 'test'" 'Revert "feat: add x"' "fixup! fix: z"
+       "refactor(affiliate-site/lib): split guard" )
+  bad=( "skills: add x" "Add x" "feat:add x" "feat : add x" "feature: x" "fix(): x" "feat(x) : y" "" "Feat: x" )
+  for m in "${ok[@]}";  do check_header "$m" || { echo "FAIL should pass: $m"; fail=1; }; done
+  for m in "${bad[@]}"; do check_header "$m" && { echo "FAIL should reject: $m"; fail=1; }; done
+  [ $fail = 0 ] && echo "commit-msg self-test: ${#ok[@]} accepted, ${#bad[@]} rejected — ok"
+  exit $fail
+fi
+
+msg_file="${1:?commit-msg hook needs the message file}"
+# First line that is not a git comment.
+header=$(grep -v '^#' "$msg_file" | sed -n '/[^[:space:]]/{p;q}')
+
+if ! check_header "$header"; then
+  {
+    echo "COMMIT BLOCKED — the message is not a Conventional Commit:"
+    echo "  $header"
+    echo
+    echo "Use:  <type>[(scope)][!]: <description>"
+    echo "      types: ${TYPES//|/ }"
+    echo "      e.g. feat(skills): add wizard   |   fix(crawler): keep slug on empty brand"
+    echo "      breaking change: feat(api)!: …  or a 'BREAKING CHANGE: …' footer"
+    echo "Your message is kept in .git/COMMIT_EDITMSG — re-run with: git commit -e -F .git/COMMIT_EDITMSG"
+  } >&2
+  exit 1
+fi

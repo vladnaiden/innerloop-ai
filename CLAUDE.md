@@ -77,6 +77,11 @@ Skills were derived from a sweep of 60+ sessions (25.08.2026, `session-sweep`); 
 - No `sleep` longer than 5 minutes; poll with `scripts/wait-for-pool.sh` or a
   `Monitor`. He reads long silent waits as idle. Never `pkill -f <pattern that
   appears in your own command line>` — it killed its own shell four times.
+- **Commits follow Conventional Commits; versions are SemVer tags** (02.11.2026). `scripts/githooks/commit-msg` blocks any
+  other header: `<type>[(scope)][!]: <description>`, types `feat fix docs style refactor perf test build ci chore revert`.
+  Release: `bash scripts/release.sh` (dry run) → `--go` (prepends `CHANGELOG.md`, commits only that file, annotated `vX.Y.Z`
+  tag; fix → patch, feat → minor, `!`/`BREAKING CHANGE:` → major, minor while < 1.0). Tags stay local; push on his word.
+  `pre-*` checkpoint tags are not versions. The site repo (`.devtools/affiliate-site`) is not covered yet.
 - Any refactor / "make it agnostic" / "fix without breaking" starts with a git
   checkpoint (`checkpoint-refactor`); any "done" ends with fresh evidence
   (`verify-before-claim`).
